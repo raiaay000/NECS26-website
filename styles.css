@@ -157,6 +157,14 @@
       color: var(--bg-dark);
       box-shadow: var(--shadow-gold);
     }
+    .nav-logo-img {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      display: block;
+      object-fit: cover;
+      box-shadow: var(--shadow-gold);
+    }
     .nav-title {
       font-family: 'Space Grotesk', sans-serif;
       font-weight: 700;
@@ -1908,7 +1916,6 @@ input:focus, select:focus {
 
 
     }
-
 
 
 
