@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NECS 2026 | Merch Shop</title>
+  <meta name="description" content="NECS 2026 merch shop. Limited drops inspired by Valorant, Rocket League, and Smash.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="merch.css">
+</head>
+<body>
+  <a href="#main" class="skip-link">Skip to main content</a>
+
+  <div class="floating-notes" aria-hidden="true">
+    <div class="note"><svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>
+    <div class="note"><svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>
+    <div class="note"><svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>
+    <div class="note"><svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>
+    <div class="note"><svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>
+    <div class="note"><svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>
+    <div class="note"><svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>
+    <div class="note"><svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg></div>
+  </div>
+
+  <nav class="nav" id="nav">
+    <div class="nav-container">
+      <a href="index.html" class="nav-brand">
+        <div class="nav-logo">N</div>
+        <span class="nav-title">NECS 2026</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="index.html#games" class="nav-link">Games</a></li>
+        <li><a href="index.html#teams" class="nav-link">Teams</a></li>
+        <li><a href="index.html#schedule" class="nav-link">Schedule</a></li>
+        <li><a href="index.html#tickets" class="nav-link">Tickets</a></li>
+        <li><a href="merch.html" class="nav-link">Merch</a></li>
+        <li><a href="index.html#music" class="nav-link">Music</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <button class="nav-cart" id="cartBtn" aria-label="Open cart">
+          <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+          <span>Cart</span>
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <a href="index.html#tickets" class="btn btn-primary">Get Tickets</a>
+        <button class="mobile-menu-btn" aria-label="Open menu" id="mobileMenuBtn">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="cart-overlay" id="cartOverlay"></div>
+  <aside class="cart-drawer" id="cartDrawer" role="dialog" aria-label="Shopping cart">
+    <div class="cart-header">
+      <span class="cart-title">Your Cart</span>
+      <button class="cart-close" id="cartClose" aria-label="Close cart">x</button>
+    </div>
+    <div class="cart-body" id="cartBody">
+      <div class="cart-empty">
+        <p><strong>Your cart is empty</strong></p>
+        <p style="font-size:13px;margin-top:8px">Add tickets or merch to get started</p>
+      </div>
+    </div>
+    <div class="cart-footer">
+      <div class="cart-total">
+        <span class="cart-total-label">Subtotal</span>
+        <span class="cart-total-value" id="cartTotal">$0</span>
+      </div>
+      <button class="btn btn-primary checkout-btn" id="checkoutBtn">Proceed to Checkout</button>
+    </div>
+  </aside>
+
+  <div class="toast" id="toast">Item added to cart</div>
+
+  <main id="main">
+    <section class="merch-hero">
+      <div class="merch-hero-inner">
+        <p class="merch-kicker">NECS Merch Shop</p>
+        <h1 class="merch-title">Valorant-Style Merch Drop</h1>
+        <p class="merch-subtitle">
+          Streetwear-inspired pieces made for arena lights: sharp gradients, bold crests, and champion energy.
+          Limited quantities for the Nashville 2026 run.
+        </p>
+        <div class="merch-hero-actions">
+          <a class="btn btn-primary" href="#merch">Shop the Collection</a>
+          <a class="btn btn-outline" href="checkout.html">Go to Checkout</a>
+        </div>
+      </div>
+
+      <div class="merch-hero-card">
+        <div class="hero-card-label">Drop Highlights</div>
+        <div class="merch-pill-row">
+          <span class="merch-pill">Limited 2024 gradient</span>
+          <span class="merch-pill">Arena-ready fabrics</span>
+          <span class="merch-pill">Exclusive patches</span>
+        </div>
+        <div class="merch-hero-stat">
+          <span>Items</span>
+          <strong>3</strong>
+        </div>
+        <div class="merch-hero-stat">
+          <span>Ship Window</span>
+          <strong>2-3 days</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="merch-grid-section" id="merch">
+      <div class="merch-section-head">
+        <div>
+          <h2 class="section-title">Featured Merch</h2>
+          <p class="section-sub">Limited run, Valorant-inspired palette, built for LAN weekends.</p>
+        </div>
+        <div class="merch-filter">All items</div>
+      </div>
+
+      <div class="merch-grid">
+        <article class="merch-card">
+          <div class="merch-image">
+            <img src="images/merch-smash-tee.svg" alt="Super Smash Bros. Ultimate collage tee">
+          </div>
+          <h3 class="merch-name">Smash Collage Tee</h3>
+          <p class="merch-desc">Full-print character collage with a tournament-ready fit.</p>
+          <div class="merch-meta">
+            <span class="merch-price">$45</span>
+            <span class="merch-tag smash">Smash</span>
+          </div>
+          <button class="btn btn-outline merch-btn" data-ticket="merch-smash-tee">Add to Cart</button>
+        </article>
+
+        <article class="merch-card feature">
+          <div class="merch-image">
+            <img src="images/merch-rocket-hoodie.svg" alt="Rocket League glow hoodie">
+          </div>
+          <h3 class="merch-name">Rocket League Glow Hoodie</h3>
+          <p class="merch-desc">Midnight fleece with neon crest, inspired by aerial plays.</p>
+          <div class="merch-meta">
+            <span class="merch-price">$79</span>
+            <span class="merch-tag rocket">Rocket</span>
+          </div>
+          <button class="btn btn-primary merch-btn" data-ticket="merch-rocket-hoodie">Add to Cart</button>
+        </article>
+
+        <article class="merch-card">
+          <div class="merch-image">
+            <img src="images/merch-valorant-jersey.svg" alt="Valorant Champions 2024 jersey">
+          </div>
+          <h3 class="merch-name">Valorant Champions Jersey</h3>
+          <p class="merch-desc">Gradient 2024 jersey with champion crest and sleeve graphics.</p>
+          <div class="merch-meta">
+            <span class="merch-price">$89</span>
+            <span class="merch-tag valorant">Valorant</span>
+          </div>
+          <button class="btn btn-outline merch-btn" data-ticket="merch-valorant-jersey">Add to Cart</button>
+        </article>
+      </div>
+    </section>
+
+    <section class="merch-band">
+      <div>
+        <h3>Need the full drop?</h3>
+        <p>Bundle all three items and rep the whole event all weekend long.</p>
+      </div>
+      <button class="btn btn-primary" data-ticket="merch-bundle">Add Bundle</button>
+    </section>
+  </main>
+
+  <script src="script.js" defer></script>
+</body>
+</html>

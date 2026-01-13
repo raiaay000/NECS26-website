@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-label="Valorant Champions jersey">
+  <defs>
+    <linearGradient id="jerseyGradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff4655"/>
+      <stop offset="0.6" stop-color="#8c2b3a"/>
+      <stop offset="1" stop-color="#1a1a26"/>
+    </linearGradient>
+    <linearGradient id="accentFade" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff8a95"/>
+      <stop offset="1" stop-color="#ffffff"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="320" rx="24" fill="#14141e"/>
+  <path d="M90 60l24-22h92l24 22 36-10 20 40-32 16 6 152a18 18 0 0 1-18 18H88a18 18 0 0 1-18-18l6-152-32-16 20-40 36 10z" fill="url(#jerseyGradient)"/>
+  <path d="M92 104l20-10 12 20-22 10-10-20z" fill="rgba(255,255,255,0.18)"/>
+  <path d="M228 104l-20-10-12 20 22 10 10-20z" fill="rgba(255,255,255,0.18)"/>
+  <g transform="translate(118 120)">
+    <path d="M42 0l28 16-28 16-28-16 28-16z" fill="url(#accentFade)"/>
+    <path d="M42 36l28 16-28 16-28-16 28-16z" fill="rgba(255,255,255,0.25)"/>
+  </g>
+  <text x="160" y="210" text-anchor="middle" font-size="18" font-family="Arial, sans-serif" fill="#ffd1d5" letter-spacing="3">VALORANT</text>
+  <text x="160" y="236" text-anchor="middle" font-size="14" font-family="Arial, sans-serif" fill="#ffffff" letter-spacing="4">CHAMPIONS</text>
+  <text x="160" y="260" text-anchor="middle" font-size="16" font-family="Arial, sans-serif" fill="#ffffff" letter-spacing="6">2024</text>
+</svg>
