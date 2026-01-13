@@ -73,7 +73,11 @@ setInterval(updateCountdown, 1000);
 const tickets = {
   day:  { name: 'Day Pass',        price: 45,  desc: 'Single day general admission' },
   full: { name: 'Full Event Pass', price: 149, desc: 'All 5 days with priority seating' },
-  vip:  { name: 'VIP Experience',  price: 399, desc: 'Premium access with exclusive perks' }
+  vip:  { name: 'VIP Experience',  price: 399, desc: 'Premium access with exclusive perks' },
+  'merch-smash-tee': { name: 'Smash Collage Tee', price: 45, desc: 'Full-print character collage tee' },
+  'merch-rocket-hoodie': { name: 'Rocket League Glow Hoodie', price: 79, desc: 'Neon crest hoodie with fleece lining' },
+  'merch-valorant-jersey': { name: 'Valorant Champions Jersey', price: 89, desc: 'Gradient 2024 jersey with crest patch' },
+  'merch-bundle': { name: 'Merch Bundle', price: 199, desc: 'All three merch items in one bundle' }
 };
 
 // cart is still an object like before: { day: 2, vip: 1 }
@@ -134,7 +138,7 @@ function renderCart() {
 
   if (items.length === 0) {
     cartBody.innerHTML =
-      '<div class="cart-empty"><p><strong>Your cart is empty</strong></p><p style="font-size:13px;margin-top:8px">Add tickets to get started</p></div>';
+      '<div class="cart-empty"><p><strong>Your cart is empty</strong></p><p style="font-size:13px;margin-top:8px">Add tickets or merch to get started</p></div>';
     return;
   }
 
@@ -418,6 +422,7 @@ mobileMenuBtn?.addEventListener('click', () => {
   const gTitle = document.getElementById('gTitle');
   const gSub = document.getElementById('gSub');
   const gImg = document.getElementById('gImg');
+  const gVideo = document.getElementById('gVideo');
   const gFacts = document.getElementById('gFacts');
   const gAbout = document.getElementById('gAbout');
   const followBtn = document.getElementById('followBtn');
@@ -432,6 +437,7 @@ mobileMenuBtn?.addEventListener('click', () => {
       title: 'Valorant Champions',
       sub: '5v5 tactical showdown • main stage energy',
       img: 'images/img-1-f1a1305d46.png',
+      video: 'videos/valorant.mp4',
       facts: [['Teams', '16'], ['Prize', '$200,000'], ['Style', 'Best-of series'], ['Stage', 'Main Arena']],
       about: `Expect clutch rounds, loud crowds, and a broadcast-style experience. If you're new, watch the first map — you'll pick up the rhythm fast.`
     },
@@ -439,6 +445,7 @@ mobileMenuBtn?.addEventListener('click', () => {
       title: 'RLCS Championship',
       sub: 'Fast matches • aerial plays • nonstop momentum swings',
       img: 'images/img-2-828f7bcd7e.png',
+      video: 'videos/rocket.mp4',
       facts: [['Teams', '12'], ['Prize', '$150,000'], ['Style', 'Best-of series'], ['Stage', 'Arena / Featured']],
       about: `Rocket League is the "easy to understand, hard to master" bracket. Matches move fast, so check the schedule to catch your favorite teams.`
     },
@@ -446,6 +453,7 @@ mobileMenuBtn?.addEventListener('click', () => {
       title: 'SSBU Invitational',
       sub: '64-player bracket • character variety • crowd reactions go crazy',
       img: 'images/img-3-fcdd53f857.png',
+      video: 'videos/smash.mp4',
       facts: [['Players', '64'], ['Prize', '$150,000'], ['Format', 'Pools → Top Cut'], ['Stage', 'Featured Stage']],
       about: `Expect hype moments, surprise picks, and brutal upsets. Even early sets can be legendary.`
     }
@@ -457,6 +465,10 @@ mobileMenuBtn?.addEventListener('click', () => {
     gSub.textContent = 'Go back and choose a game.';
     gImg.alt = '';
     gImg.src = '';
+    if (gVideo) {
+      gVideo.removeAttribute('src');
+      gVideo.load();
+    }
     gFacts.innerHTML = `<li><span>Tip</span><strong>Try ?g=valorant</strong></li>`;
     gAbout.textContent = '';
     followBtn.style.display = 'none';
@@ -467,6 +479,18 @@ mobileMenuBtn?.addEventListener('click', () => {
   gSub.textContent = info.sub;
   gImg.src = info.img;
   gImg.alt = info.title;
+  if (gVideo) {
+    gVideo.src = info.video;
+    gVideo.load();
+    const hero = document.querySelector('.game-hero');
+    hero?.addEventListener('mouseenter', () => {
+      gVideo.play().catch(() => {});
+    });
+    hero?.addEventListener('mouseleave', () => {
+      gVideo.pause();
+      gVideo.currentTime = 0;
+    });
+  }
 
   gFacts.innerHTML = info.facts
     .map(([k, v]) => `<li><span>${k}</span><strong>${v}</strong></li>`)

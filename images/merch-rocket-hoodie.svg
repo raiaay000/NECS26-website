@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-label="Rocket League hoodie">
+  <defs>
+    <linearGradient id="hoodieGradient" x1="0" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#0b0f1f"/>
+      <stop offset="1" stop-color="#111b2e"/>
+    </linearGradient>
+    <linearGradient id="crestGlow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#00d4ff"/>
+      <stop offset="1" stop-color="#4aa3ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="320" rx="24" fill="#0f111a"/>
+  <path d="M120 60h80l24 28 30 8-10 42-22-8v134a18 18 0 0 1-18 18H116a18 18 0 0 1-18-18V130l-22 8-10-42 30-8 24-28z" fill="url(#hoodieGradient)"/>
+  <path d="M140 88h40l14 18-18 14h-32l-18-14 14-18z" fill="#1c2a45"/>
+  <circle cx="160" cy="170" r="50" fill="rgba(0,212,255,0.08)"/>
+  <path d="M160 128c28 0 50 18 50 42 0 24-22 42-50 42-28 0-50-18-50-42 0-24 22-42 50-42z" fill="none" stroke="url(#crestGlow)" stroke-width="6"/>
+  <path d="M144 172l30-22 16 24-28 18-18-20z" fill="url(#crestGlow)"/>
+  <text x="160" y="240" text-anchor="middle" font-size="20" font-family="Arial, sans-serif" fill="#7ec6ff" letter-spacing="2">ROCKET</text>
+</svg>
