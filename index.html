@@ -49,10 +49,13 @@
           <span class="cart-count" id="cartCount">0</span>
         </button>
         <div class="auth-controls">
-          <button class="auth-login" id="authLoginBtn" type="button">Sign in with Google</button>
-          <div class="auth-user" id="authUser" hidden>
-            <span class="auth-user-name" id="authUserName">Signed in</span>
-            <button class="auth-logout" id="authLogoutBtn" type="button">Log out</button>
+          <button class="auth-login" id="authLoginBtn" type="button" aria-haspopup="menu" aria-expanded="false">
+            <span class="auth-user-icon" aria-hidden="true">●</span>
+            <span class="auth-login-label" id="authLoginLabel">Log In</span>
+            <span class="auth-user-chevron" aria-hidden="true">▾</span>
+          </button>
+          <div class="auth-menu" id="authMenu" role="menu" hidden>
+            <button class="auth-menu-item auth-menu-logout" id="authMenuLogoutBtn" type="button" role="menuitem">Log out</button>
           </div>
         </div>
         <a href="#tickets" class="btn btn-primary">Get Tickets</a>
