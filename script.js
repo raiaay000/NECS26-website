@@ -15,13 +15,16 @@ function safeParse(json, fallback) {
   try { return JSON.parse(json); } catch { return fallback; }
 }
 
+const byId = (id) => document.getElementById(id);
+const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
 function formatMoney(n) {
   const num = Number(n || 0);
   return '$' + num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 // toast helper (KEEP yours)
-const toast = document.getElementById('toast');
+const toast = byId('toast');
 function showToast(message) {
   if (!toast) return;
   toast.textContent = message;
@@ -30,9 +33,114 @@ function showToast(message) {
 }
 
 // ==============================
+// auth helpers (Google via Firebase)
+// ==============================
+const AUTH_USER_KEY = 'necs_auth_user';
+let authUser = safeParse(localStorage.getItem(AUTH_USER_KEY) || 'null', null);
+
+const authLoginBtn = byId('authLoginBtn');
+const authUserWrap = byId('authUser');
+const authUserName = byId('authUserName');
+const authLogoutBtn = byId('authLogoutBtn');
+
+function cacheAuthUser(user) {
+  authUser = user
+    ? {
+        uid: user.uid,
+        displayName: user.displayName || '',
+        email: user.email || ''
+      }
+    : null;
+  if (authUser) localStorage.setItem(AUTH_USER_KEY, JSON.stringify(authUser));
+  else localStorage.removeItem(AUTH_USER_KEY);
+}
+
+function currentUserId() {
+  return authUser?.uid || 'guest';
+}
+
+function userScopedKey(base) {
+  return `${base}:${currentUserId()}`;
+}
+
+function updateAuthUI() {
+  if (!authLoginBtn || !authUserWrap || !authUserName) return;
+  const label = authUser?.displayName || authUser?.email || '';
+  authLoginBtn.hidden = Boolean(label);
+  authUserWrap.hidden = !label;
+  if (label) authUserName.textContent = label;
+}
+
+function initFirebaseAuth() {
+  updateAuthUI();
+
+  const hasFirebase = Boolean(window.firebase && window.firebase.auth);
+  const hasConfig = Boolean(window.NECS_FIREBASE_CONFIG);
+
+  if (!hasFirebase || !hasConfig) {
+    authLoginBtn?.addEventListener('click', () => {
+      showToast('Google login requires Firebase config');
+    });
+    authLogoutBtn?.addEventListener('click', () => {
+      cacheAuthUser(null);
+      updateAuthUI();
+      renderReminderBadges();
+    });
+    return;
+  }
+
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(window.NECS_FIREBASE_CONFIG);
+    const auth = firebase.auth();
+    const provider = new firebase.auth.GoogleAuthProvider();
+
+    auth.onAuthStateChanged((user) => {
+      cacheAuthUser(user);
+      updateAuthUI();
+      renderReminderBadges();
+    });
+
+    authLoginBtn?.addEventListener('click', async () => {
+      try {
+        await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        await auth.signInWithPopup(provider);
+      } catch (err) {
+        console.error(err);
+        const code = err?.code || '';
+        if (code.includes('popup') || code.includes('cancelled')) {
+          try {
+            await auth.signInWithRedirect(provider);
+            return;
+          } catch (redirectErr) {
+            console.error(redirectErr);
+          }
+        }
+        showToast('Google sign-in failed — check Firebase config/domain');
+      }
+    });
+
+    authLogoutBtn?.addEventListener('click', async () => {
+      try {
+        await auth.signOut();
+      } catch (err) {
+        console.error(err);
+        showToast('Logout failed');
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    authLoginBtn?.addEventListener('click', () => {
+      showToast('Firebase init failed');
+    });
+  }
+}
+
+initFirebaseAuth();
+
+// ==============================
 // nav scroll (KEEP)
 // ==============================
-const nav = document.getElementById('nav');
+const nav = byId('nav');
 window.addEventListener('scroll', () => {
   if (!nav) return;
   nav.classList.toggle('scrolled', window.scrollY > 50);
@@ -44,10 +152,10 @@ window.addEventListener('scroll', () => {
 const eventDate = new Date('May 6, 2026 10:00:00 CDT').getTime();
 
 function updateCountdown() {
-  const daysEl = document.getElementById('days');
-  const hoursEl = document.getElementById('hours');
-  const minutesEl = document.getElementById('minutes');
-  const secondsEl = document.getElementById('seconds');
+  const daysEl = byId('days');
+  const hoursEl = byId('hours');
+  const minutesEl = byId('minutes');
+  const secondsEl = byId('seconds');
   if (!daysEl || !hoursEl || !minutesEl || !secondsEl) return;
 
   const now = Date.now();
@@ -84,32 +192,40 @@ const tickets = {
 let cart = safeParse(localStorage.getItem(CART_KEY), {}) || {};
 
 // elements (home page)
-const cartBtn = document.getElementById('cartBtn');
-const cartOverlay = document.getElementById('cartOverlay');
-const cartDrawer = document.getElementById('cartDrawer');
-const cartClose = document.getElementById('cartClose');
-const cartBody = document.getElementById('cartBody');
-const cartCount = document.getElementById('cartCount');
-const cartTotal = document.getElementById('cartTotal');
-const checkoutBtn = document.getElementById('checkoutBtn');
+const cartBtn = byId('cartBtn');
+const cartOverlay = byId('cartOverlay');
+const cartDrawer = byId('cartDrawer');
+const cartClose = byId('cartClose');
+const cartBody = byId('cartBody');
+const cartCount = byId('cartCount');
+const cartTotal = byId('cartTotal');
+const checkoutBtn = byId('checkoutBtn');
 
 function saveCart() {
   localStorage.setItem(CART_KEY, JSON.stringify(cart));
 }
 
-function calcCartTotals() {
+function cartEntries(cartObj = cart) {
+  return Object.entries(cartObj).filter(([id, qty]) => Number(qty) > 0 && tickets[id]);
+}
+
+function summarizeCart(cartObj = cart) {
   let count = 0;
   let total = 0;
+  const items = cartEntries(cartObj);
 
-  for (const id in cart) {
-    const qty = Number(cart[id] || 0);
-    if (qty > 0 && tickets[id]) {
-      count += qty;
-      total += tickets[id].price * qty;
-    }
-  }
+  items.forEach(([id, qty]) => {
+    const nQty = Number(qty);
+    count += nQty;
+    total += tickets[id].price * nQty;
+  });
 
-  return { count, total };
+  const rowsHtml = items.map(([id, qty]) => {
+    const line = tickets[id].price * Number(qty);
+    return `<div class="summary-row"><span>${tickets[id].name} × ${qty}</span><strong>${formatMoney(line)}</strong></div>`;
+  }).join('');
+
+  return { items, count, total, rowsHtml };
 }
 
 function openCart() {
@@ -130,11 +246,9 @@ function renderCart() {
   // If you’re not on index page, just stop (prevents errors on checkout/game pages)
   if (!cartBody || !cartCount || !cartTotal) return;
 
-  const { count, total } = calcCartTotals();
+  const { items, count, total } = summarizeCart();
   cartCount.textContent = count;
   cartTotal.textContent = formatMoney(total);
-
-  const items = Object.entries(cart).filter(([id, qty]) => Number(qty) > 0 && tickets[id]);
 
   if (items.length === 0) {
     cartBody.innerHTML =
@@ -164,22 +278,6 @@ function renderCart() {
       '</div>'
     );
   }).join('');
-
-  cartBody.querySelectorAll('[data-action]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = btn.dataset.id;
-      const action = btn.dataset.action;
-
-      if (!tickets[id]) return;
-
-      if (action === 'inc') cart[id] = (cart[id] || 0) + 1;
-      else if (action === 'dec' && cart[id] > 1) cart[id]--;
-      else if (action === 'remove') delete cart[id];
-
-      saveCart();
-      renderCart();
-    });
-  });
 }
 
 // open/close listeners (only if elements exist)
@@ -187,7 +285,23 @@ cartBtn?.addEventListener('click', openCart);
 cartOverlay?.addEventListener('click', closeCart);
 cartClose?.addEventListener('click', closeCart);
 
-document.querySelectorAll('[data-ticket]').forEach(btn => {
+cartBody?.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+
+  const id = btn.dataset.id;
+  const action = btn.dataset.action;
+  if (!tickets[id]) return;
+
+  if (action === 'inc') cart[id] = (cart[id] || 0) + 1;
+  else if (action === 'dec' && cart[id] > 1) cart[id] -= 1;
+  else if (action === 'remove') delete cart[id];
+
+  saveCart();
+  renderCart();
+});
+
+qsa('[data-ticket]').forEach(btn => {
   btn.addEventListener('click', () => {
     const id = btn.dataset.ticket;
     if (!tickets[id]) return;
@@ -201,7 +315,7 @@ document.querySelectorAll('[data-ticket]').forEach(btn => {
 });
 
 checkoutBtn?.addEventListener('click', () => {
-  const items = Object.entries(cart).filter(([id, qty]) => Number(qty) > 0 && tickets[id]);
+  const { items } = summarizeCart();
 
   if (!items.length) {
     showToast('Your cart is empty');
@@ -223,14 +337,230 @@ renderCart();
 // ==============================
 // event modal (KEEP)
 // ==============================
-const eventModal = document.getElementById('eventModal');
-const modalClose = document.getElementById('modalClose');
-const modalTitle = document.getElementById('modalTitle');
-const modalTime = document.getElementById('modalTime');
-const modalStage = document.getElementById('modalStage');
-const modalNotify = document.getElementById('modalNotify');
+const eventModal = byId('eventModal');
+const modalClose = byId('modalClose');
+const modalTitle = byId('modalTitle');
+const modalTime = byId('modalTime');
+const modalStage = byId('modalStage');
+const modalNotify = byId('modalNotify');
+const modalCalendar = byId('modalCalendar');
+const scheduleControls = byId('scheduleControls');
 
-document.querySelectorAll('.schedule-event').forEach(event => {
+const REMINDERS_BASE_KEY = 'necs_schedule_reminders';
+const DAY_DATES = {
+  wed: '2026-05-06',
+  thu: '2026-05-07',
+  fri: '2026-05-08',
+  sat: '2026-05-09',
+  sun: '2026-05-10'
+};
+
+let currentScheduleEvent = null;
+
+function remindersKey() {
+  return userScopedKey(REMINDERS_BASE_KEY);
+}
+
+function parseTimeToParts(timeStr) {
+  const match = String(timeStr || '').trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return null;
+  let hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  const period = match[3].toUpperCase();
+  if (period === 'PM' && hours < 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+  return { hours, minutes };
+}
+
+function scheduleEventDate(eventEl) {
+  const dayKey = eventEl?.dataset.day;
+  const dateStr = DAY_DATES[dayKey];
+  const timeStr = eventEl?.dataset.time;
+  if (!dateStr || !timeStr) return null;
+  const parts = parseTimeToParts(timeStr);
+  if (!parts) return null;
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day, parts.hours, parts.minutes, 0, 0);
+}
+
+function toICSDate(dt) {
+  const pad = (n) => String(n).padStart(2, '0');
+  return [
+    dt.getFullYear(),
+    pad(dt.getMonth() + 1),
+    pad(dt.getDate())
+  ].join('') + 'T' + [
+    pad(dt.getHours()),
+    pad(dt.getMinutes()),
+    pad(dt.getSeconds())
+  ].join('');
+}
+
+function buildICS({ title, start, end, description, location }) {
+  const uid = `necs-${start.getTime()}-${Math.random().toString(16).slice(2, 8)}`;
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//NECS 2026//Schedule//EN',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${toICSDate(new Date())}`,
+    `DTSTART:${toICSDate(start)}`,
+    `DTEND:${toICSDate(end)}`,
+    `SUMMARY:${title}`,
+    `DESCRIPTION:${description}`,
+    `LOCATION:${location}`,
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ];
+  return lines.join('\r\n');
+}
+
+function downloadICS(filename, contents) {
+  const blob = new Blob([contents], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function reminderKey(eventEl) {
+  if (!eventEl) return '';
+  const { event, day, time } = eventEl.dataset;
+  return [event, day, time].join('|');
+}
+
+function getReminders() {
+  return safeParse(localStorage.getItem(remindersKey()) || '[]', []);
+}
+
+function saveReminders(reminders) {
+  localStorage.setItem(remindersKey(), JSON.stringify(reminders));
+}
+
+function reminderSetFor(eventEl, reminders = getReminders()) {
+  const key = reminderKey(eventEl);
+  return Boolean(key && reminders.some((r) => r.key === key));
+}
+
+function renderReminderBadges(reminders = getReminders()) {
+  qsa('.schedule-event').forEach((eventEl) => {
+    const hasReminder = reminderSetFor(eventEl, reminders);
+    eventEl.classList.toggle('has-reminder', hasReminder);
+
+    const existing = eventEl.querySelector('.event-reminder');
+    if (hasReminder && !existing) {
+      const badge = document.createElement('span');
+      badge.className = 'event-reminder';
+      badge.textContent = 'Reminder Set';
+      badge.setAttribute('aria-label', 'Reminder set');
+      const gameBadge = eventEl.querySelector('.event-badge');
+      if (gameBadge) eventEl.insertBefore(badge, gameBadge);
+      else eventEl.appendChild(badge);
+    }
+    if (!hasReminder && existing) existing.remove();
+  });
+}
+
+function updateReminderButton(eventEl) {
+  if (!modalNotify) return;
+  const reminderSet = reminderSetFor(eventEl);
+  modalNotify.textContent = reminderSet ? 'Reminder Set' : 'Set Reminder';
+}
+
+function setReminder(eventEl) {
+  const start = scheduleEventDate(eventEl);
+  if (!start) return showToast('Reminder not available for this event');
+  const key = reminderKey(eventEl);
+  const reminders = getReminders();
+  if (reminders.some((r) => r.key === key)) {
+    showToast('Reminder already set');
+    updateReminderButton(eventEl);
+    return;
+  }
+  reminders.push({
+    key,
+    title: eventEl.dataset.event || 'NECS Event',
+    day: eventEl.dataset.day || '',
+    time: eventEl.dataset.time || '',
+    stage: eventEl.dataset.stage || '',
+    startsAt: start.getTime(),
+    createdAt: Date.now()
+  });
+  saveReminders(reminders);
+  renderReminderBadges(reminders);
+  updateReminderButton(eventEl);
+  showToast('Reminder set for this event');
+}
+
+function addEventToCalendar(eventEl) {
+  const start = scheduleEventDate(eventEl);
+  if (!start) return showToast('Calendar entry not available');
+  const end = new Date(start.getTime() + 90 * 60 * 1000);
+  const title = eventEl.dataset.event || 'NECS Event';
+  const stage = eventEl.dataset.stage || 'NECS Arena';
+  const desc = `NECS 2026 • ${title} • ${eventEl.dataset.time || ''} CT`;
+  const ics = buildICS({
+    title,
+    start,
+    end,
+    description: desc,
+    location: stage
+  });
+  const safeName = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  downloadICS(`${safeName || 'necs-event'}.ics`, ics);
+  showToast('Calendar download started');
+}
+
+function initScheduleFilters() {
+  if (!scheduleControls) return;
+  const state = { game: 'all', day: 'all', stage: 'all' };
+  const events = qsa('.schedule-event');
+  const days = qsa('.schedule-day');
+
+  function matchesFilter(eventEl) {
+    const gameOk = state.game === 'all' || eventEl.dataset.game === state.game;
+    const dayOk = state.day === 'all' || eventEl.dataset.day === state.day;
+    const stageOk = state.stage === 'all' || eventEl.dataset.stageType === state.stage;
+    return gameOk && dayOk && stageOk;
+  }
+
+  function applyScheduleFilters() {
+    events.forEach((eventEl) => {
+      eventEl.classList.toggle('is-hidden', !matchesFilter(eventEl));
+    });
+
+    days.forEach((dayEl) => {
+      const anyVisible = qsa('.schedule-event', dayEl).some((ev) => !ev.classList.contains('is-hidden'));
+      dayEl.classList.toggle('is-hidden', !anyVisible);
+    });
+  }
+
+  scheduleControls.addEventListener('click', (e) => {
+    const btn = e.target.closest('.schedule-filter');
+    if (!btn) return;
+    const filter = btn.dataset.filter;
+    const value = btn.dataset.value;
+    if (!filter || !value) return;
+    state[filter] = value;
+
+    qsa(`.schedule-filter[data-filter="${filter}"]`, scheduleControls)
+      .forEach((b) => b.classList.toggle('active', b === btn));
+
+    applyScheduleFilters();
+  });
+
+  applyScheduleFilters();
+}
+
+initScheduleFilters();
+renderReminderBadges();
+
+qsa('.schedule-event').forEach(event => {
   event.addEventListener('click', () => {
     if (!eventModal || !modalTitle || !modalTime || !modalStage) return;
 
@@ -241,6 +571,8 @@ document.querySelectorAll('.schedule-event').forEach(event => {
     modalTitle.textContent = eventName;
     modalTime.textContent = time;
     modalStage.textContent = stage;
+    currentScheduleEvent = event;
+    updateReminderButton(event);
     eventModal.classList.add('open');
   });
 });
@@ -254,14 +586,19 @@ eventModal?.addEventListener('click', (e) => {
 });
 
 modalNotify?.addEventListener('click', () => {
-  eventModal?.classList.remove('open');
-  showToast('Reminder set for this event');
+  if (!currentScheduleEvent) return;
+  setReminder(currentScheduleEvent);
+});
+
+modalCalendar?.addEventListener('click', () => {
+  if (!currentScheduleEvent) return;
+  addEventToCalendar(currentScheduleEvent);
 });
 
 // ==============================
 // game card clicks -> game details page (KEEP)
 // ==============================
-document.querySelectorAll('.game-card').forEach(card => {
+qsa('.game-card').forEach(card => {
   card.addEventListener('click', () => {
     const g = card.dataset.game;
     if (!g) return;
@@ -272,7 +609,7 @@ document.querySelectorAll('.game-card').forEach(card => {
 // ==============================
 // team card clicks (KEEP)
 // ==============================
-document.querySelectorAll('.team-card').forEach(card => {
+qsa('.team-card').forEach(card => {
   card.addEventListener('click', () => {
     const teamName = card.querySelector('h3')?.textContent || 'team';
     showToast('Viewing ' + teamName + ' roster');
@@ -282,8 +619,8 @@ document.querySelectorAll('.team-card').forEach(card => {
 // ==============================
 // music tabs (KEEP)
 // ==============================
-const musicTabs = document.querySelectorAll('.music-tab');
-const musicLists = document.querySelectorAll('.music-list');
+const musicTabs = qsa('.music-tab');
+const musicLists = qsa('.music-list');
 
 musicTabs.forEach(tab => {
   tab.addEventListener('click', () => {
@@ -300,7 +637,7 @@ musicTabs.forEach(tab => {
 });
 
 // song clicks (KEEP)
-document.querySelectorAll('.song-item').forEach(item => {
+qsa('.song-item').forEach(item => {
   item.addEventListener('click', () => {
     const title = item.querySelector('.song-title')?.textContent || 'song';
     showToast('Playing: ' + title);
@@ -308,7 +645,7 @@ document.querySelectorAll('.song-item').forEach(item => {
 });
 
 // mobile menu (KEEP)
-const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+const mobileMenuBtn = byId('mobileMenuBtn');
 mobileMenuBtn?.addEventListener('click', () => {
   showToast('Use the links below to navigate');
 });
@@ -317,36 +654,28 @@ mobileMenuBtn?.addEventListener('click', () => {
 // ===== Checkout Page Init (UPGRADED) =====
 // ==============================
 (function initCheckout() {
-  const summary = document.getElementById('summary');
-  const totalEl = document.getElementById('total');
-  const payTotalEl = document.getElementById('payTotal'); // from the upgraded checkout.html
-  const nameEl = document.getElementById('name');
-  const emailEl = document.getElementById('email');
-  const dayChoice = document.getElementById('dayChoice');
-  const payBtn = document.getElementById('payBtn');
-  const clearBtn = document.getElementById('clearBtn');
+  const summary = byId('summary');
+  const totalEl = byId('total');
+  const payTotalEl = byId('payTotal'); // from the upgraded checkout.html
+  const nameEl = byId('name');
+  const emailEl = byId('email');
+  const dayChoice = byId('dayChoice');
+  const payBtn = byId('payBtn');
+  const clearBtn = byId('clearBtn');
 
   // payment fields (new)
-  const cardNumber = document.getElementById('cardNumber');
-  const cardExp = document.getElementById('cardExp');
-  const cardCvc = document.getElementById('cardCvc');
-  const cardZip = document.getElementById('cardZip');
+  const cardNumber = byId('cardNumber');
+  const cardExp = byId('cardExp');
+  const cardCvc = byId('cardCvc');
+  const cardZip = byId('cardZip');
 
   if (!summary || !totalEl || !payBtn) return; // not on checkout.html
 
   const stored = safeParse(localStorage.getItem(CART_KEY) || '{}', {});
-  let total = 0;
+  const { items, total, rowsHtml } = summarizeCart(stored);
 
-  const rows = Object.entries(stored)
-    .filter(([id, qty]) => Number(qty) > 0 && tickets[id])
-    .map(([id, qty]) => {
-      const line = tickets[id].price * Number(qty);
-      total += line;
-      return `<div class="summary-row"><span>${tickets[id].name} × ${qty}</span><strong>${formatMoney(line)}</strong></div>`;
-    });
-
-  summary.innerHTML = rows.length
-    ? rows.join('')
+  summary.innerHTML = items.length
+    ? rowsHtml
     : '<div class="muted">Cart is empty. Go back and add tickets.</div>';
 
   totalEl.textContent = formatMoney(total);
@@ -376,7 +705,7 @@ mobileMenuBtn?.addEventListener('click', () => {
   });
 
   payBtn.addEventListener('click', () => {
-    if (!rows.length) return showToast('Cart is empty');
+    if (!items.length) return showToast('Cart is empty');
 
     const name = (nameEl?.value || '').trim();
     const email = (emailEl?.value || '').trim();
@@ -419,16 +748,16 @@ mobileMenuBtn?.addEventListener('click', () => {
 // ===== Game Page Init (KEEP) =====
 // ==============================
 (function initGamePage() {
-  const gTitle = document.getElementById('gTitle');
-  const gSub = document.getElementById('gSub');
-  const gImg = document.getElementById('gImg');
-  const gVideo = document.getElementById('gVideo');
-  const gFacts = document.getElementById('gFacts');
-  const gAbout = document.getElementById('gAbout');
-  const followBtn = document.getElementById('followBtn');
-  const volumeRange = document.getElementById('volumeRange');
+  const gTitle = byId('gTitle');
+  const gSub = byId('gSub');
+  const gImg = byId('gImg');
+  const gVideo = byId('gVideo');
+  const gFacts = byId('gFacts');
+  const gAbout = byId('gAbout');
+  const followBtn = byId('followBtn');
+  const volumeRange = byId('volumeRange');
   const mediaWrap = document.querySelector('.game-media');
-  const soundToggle = document.getElementById('soundToggle');
+  const soundToggle = byId('soundToggle');
 
   if (!gTitle || !gImg || !gFacts || !gAbout || !followBtn) return;
 
@@ -620,18 +949,19 @@ mobileMenuBtn?.addEventListener('click', () => {
 // ===== Follow Updates Page Init =====
 // ==============================
 (function initFollowPage() {
-  const form = document.getElementById('followForm');
-  const nameEl = document.getElementById('followName');
-  const emailEl = document.getElementById('followEmail');
-  const phoneEl = document.getElementById('followPhone');
-  const gameEl = document.getElementById('followGame');
-  const emailOpt = document.getElementById('followEmailOpt');
-  const smsOpt = document.getElementById('followSmsOpt');
-  const gameLabel = document.getElementById('followGameLabel');
-  const backLink = document.getElementById('followBack');
+  const form = byId('followForm');
+  const nameEl = byId('followName');
+  const emailEl = byId('followEmail');
+  const phoneEl = byId('followPhone');
+  const gameEl = byId('followGame');
+  const emailOpt = byId('followEmailOpt');
+  const smsOpt = byId('followSmsOpt');
+  const gameLabel = byId('followGameLabel');
+  const backLink = byId('followBack');
 
   if (!form || !gameEl) return;
 
+  const FOLLOW_BASE_KEY = 'necs_follow_signup';
   const params = new URLSearchParams(location.search);
   const g = (params.get('g') || '').toLowerCase();
   const gameNames = {
@@ -672,7 +1002,10 @@ mobileMenuBtn?.addEventListener('click', () => {
       createdAt: Date.now()
     };
 
-    localStorage.setItem('necs_follow_signup', JSON.stringify(payload));
+    const key = userScopedKey(FOLLOW_BASE_KEY);
+    const existing = safeParse(localStorage.getItem(key) || '[]', []);
+    existing.push({ ...payload, uid: currentUserId() });
+    localStorage.setItem(key, JSON.stringify(existing));
     form.reset();
     gameEl.value = g && gameNames[g] ? g : '';
     if (emailOpt) emailOpt.checked = true;
@@ -681,11 +1014,11 @@ mobileMenuBtn?.addEventListener('click', () => {
 })();
 // ===== Confirmation Page Init (NO canvas / no QR) =====
 (function initConfirmation() {
-  const cName = document.getElementById('cName');
-  const cEmail = document.getElementById('cEmail');
-  const cOrder = document.getElementById('cOrder');
-  const cTotal = document.getElementById('cTotal');
-  const cTickets = document.getElementById('cTickets');
+  const cName = byId('cName');
+  const cEmail = byId('cEmail');
+  const cOrder = byId('cOrder');
+  const cTotal = byId('cTotal');
+  const cTickets = byId('cTickets');
 
   if (!cName || !cEmail || !cOrder || !cTotal || !cTickets) return;
 
@@ -701,13 +1034,6 @@ mobileMenuBtn?.addEventListener('click', () => {
   cOrder.textContent = payload.orderId || '—';
   cTotal.textContent = formatMoney(payload.total || 0);
 
-  const cart = payload.cart || {};
-  const rows = Object.entries(cart)
-    .filter(([id, qty]) => Number(qty) > 0 && tickets[id])
-    .map(([id, qty]) => {
-      const line = tickets[id].price * Number(qty);
-      return `<div class="summary-row"><span>${tickets[id].name} × ${qty}</span><strong>${formatMoney(line)}</strong></div>`;
-    });
-
-  cTickets.innerHTML = rows.length ? rows.join('') : '<div class="muted">No tickets found.</div>';
+  const { items, rowsHtml } = summarizeCart(payload.cart || {});
+  cTickets.innerHTML = items.length ? rowsHtml : '<div class="muted">No tickets found.</div>';
 })();
