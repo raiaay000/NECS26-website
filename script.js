@@ -39,9 +39,9 @@ const AUTH_USER_KEY = 'necs_auth_user';
 let authUser = safeParse(localStorage.getItem(AUTH_USER_KEY) || 'null', null);
 
 const authLoginBtn = byId('authLoginBtn');
-const authUserWrap = byId('authUser');
-const authUserName = byId('authUserName');
-const authLogoutBtn = byId('authLogoutBtn');
+const authLoginLabel = byId('authLoginLabel');
+const authMenu = byId('authMenu');
+const authMenuLogoutBtn = byId('authMenuLogoutBtn');
 
 function cacheAuthUser(user) {
   authUser = user
@@ -63,26 +63,74 @@ function userScopedKey(base) {
   return `${base}:${currentUserId()}`;
 }
 
+function currentUserLabel() {
+  return authUser?.displayName || authUser?.email || '';
+}
+
 function updateAuthUI() {
-  if (!authLoginBtn || !authUserWrap || !authUserName) return;
-  const label = authUser?.displayName || authUser?.email || '';
-  authLoginBtn.hidden = Boolean(label);
-  authUserWrap.hidden = !label;
-  if (label) authUserName.textContent = label;
+  if (!authLoginBtn || !authLoginLabel) return;
+  const label = currentUserLabel();
+  if (label) {
+    authLoginBtn.classList.add('is-authenticated');
+    authLoginLabel.textContent = label;
+  } else {
+    authLoginBtn.classList.remove('is-authenticated');
+    authLoginLabel.textContent = 'Log In';
+    closeAuthMenu();
+  }
+  authLoginBtn.setAttribute('aria-expanded', 'false');
+}
+
+function openAuthMenu() {
+  if (!authLoginBtn || !authMenu || !currentUserLabel()) return;
+  authLoginBtn.classList.add('open');
+  authMenu.hidden = false;
+  authLoginBtn.setAttribute('aria-expanded', 'true');
+}
+
+function closeAuthMenu() {
+  if (!authLoginBtn || !authMenu) return;
+  authLoginBtn.classList.remove('open');
+  authMenu.hidden = true;
+  authLoginBtn.setAttribute('aria-expanded', 'false');
+}
+
+function toggleAuthMenu() {
+  if (!authMenu || !currentUserLabel()) return;
+  if (authMenu.hidden) openAuthMenu();
+  else closeAuthMenu();
+}
+
+function initAuthMenu() {
+  authMenu?.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+
+  document.addEventListener('click', () => {
+    closeAuthMenu();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeAuthMenu();
+  });
 }
 
 function initFirebaseAuth() {
   updateAuthUI();
+  initAuthMenu();
 
   const hasFirebase = Boolean(window.firebase && window.firebase.auth);
   const hasConfig = Boolean(window.NECS_FIREBASE_CONFIG);
 
   if (!hasFirebase || !hasConfig) {
-    authLoginBtn?.addEventListener('click', () => {
-      showToast('Google login requires Firebase config');
+    authLoginBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (currentUserLabel()) toggleAuthMenu();
+      else showToast('Google login requires Firebase config');
     });
-    authLogoutBtn?.addEventListener('click', () => {
+    authMenuLogoutBtn?.addEventListener('click', () => {
       cacheAuthUser(null);
+      closeAuthMenu();
       updateAuthUI();
       renderReminderBadges();
     });
@@ -94,13 +142,7 @@ function initFirebaseAuth() {
     const auth = firebase.auth();
     const provider = new firebase.auth.GoogleAuthProvider();
 
-    auth.onAuthStateChanged((user) => {
-      cacheAuthUser(user);
-      updateAuthUI();
-      renderReminderBadges();
-    });
-
-    authLoginBtn?.addEventListener('click', async () => {
+    async function signInWithGoogle() {
       try {
         await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
         await auth.signInWithPopup(provider);
@@ -117,11 +159,27 @@ function initFirebaseAuth() {
         }
         showToast('Google sign-in failed — check Firebase config/domain');
       }
+    }
+
+    auth.onAuthStateChanged((user) => {
+      cacheAuthUser(user);
+      updateAuthUI();
+      renderReminderBadges();
     });
 
-    authLogoutBtn?.addEventListener('click', async () => {
+    authLoginBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (currentUserLabel()) {
+        toggleAuthMenu();
+        return;
+      }
+      signInWithGoogle();
+    });
+
+    authMenuLogoutBtn?.addEventListener('click', async () => {
       try {
         await auth.signOut();
+        closeAuthMenu();
       } catch (err) {
         console.error(err);
         showToast('Logout failed');
