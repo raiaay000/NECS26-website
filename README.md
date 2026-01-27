@@ -1,2 +1,0 @@
-# BPA
-# Necs26Website

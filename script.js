@@ -426,6 +426,9 @@ mobileMenuBtn?.addEventListener('click', () => {
   const gFacts = document.getElementById('gFacts');
   const gAbout = document.getElementById('gAbout');
   const followBtn = document.getElementById('followBtn');
+  const volumeRange = document.getElementById('volumeRange');
+  const mediaWrap = document.querySelector('.game-media');
+  const soundToggle = document.getElementById('soundToggle');
 
   if (!gTitle || !gImg || !gFacts || !gAbout || !followBtn) return;
 
@@ -438,6 +441,7 @@ mobileMenuBtn?.addEventListener('click', () => {
       sub: '5v5 tactical showdown • main stage energy',
       img: 'images/img-1-f1a1305d46.png',
       video: 'videos/valorant.mp4',
+      audio: 'Music/valorant.mp3',
       facts: [['Teams', '16'], ['Prize', '$200,000'], ['Style', 'Best-of series'], ['Stage', 'Main Arena']],
       about: `Expect clutch rounds, loud crowds, and a broadcast-style experience. If you're new, watch the first map — you'll pick up the rhythm fast.`
     },
@@ -446,6 +450,7 @@ mobileMenuBtn?.addEventListener('click', () => {
       sub: 'Fast matches • aerial plays • nonstop momentum swings',
       img: 'images/img-2-828f7bcd7e.png',
       video: 'videos/rocket.mp4',
+      audio: 'Music/rocket.mp3',
       facts: [['Teams', '12'], ['Prize', '$150,000'], ['Style', 'Best-of series'], ['Stage', 'Arena / Featured']],
       about: `Rocket League is the "easy to understand, hard to master" bracket. Matches move fast, so check the schedule to catch your favorite teams.`
     },
@@ -454,6 +459,7 @@ mobileMenuBtn?.addEventListener('click', () => {
       sub: '64-player bracket • character variety • crowd reactions go crazy',
       img: 'images/img-3-fcdd53f857.png',
       video: 'videos/smash.mp4',
+      audio: 'Music/smash.mp3',
       facts: [['Players', '64'], ['Prize', '$150,000'], ['Format', 'Pools → Top Cut'], ['Stage', 'Featured Stage']],
       about: `Expect hype moments, surprise picks, and brutal upsets. Even early sets can be legendary.`
     }
@@ -479,18 +485,125 @@ mobileMenuBtn?.addEventListener('click', () => {
   gSub.textContent = info.sub;
   gImg.src = info.img;
   gImg.alt = info.title;
+  let gAudio = null;
+
   if (gVideo) {
     gVideo.src = info.video;
     gVideo.load();
-    const hero = document.querySelector('.game-hero');
-    hero?.addEventListener('mouseenter', () => {
-      gVideo.play().catch(() => {});
-    });
-    hero?.addEventListener('mouseleave', () => {
-      gVideo.pause();
-      gVideo.currentTime = 0;
-    });
   }
+
+  if (info.audio) {
+    gAudio = new Audio(info.audio);
+    gAudio.preload = 'metadata';
+    gAudio.loop = true;
+  }
+
+  const hero = document.querySelector('.game-hero');
+  let audioEnabled = false;
+  let audioUnlocked = false;
+  let volume = Number(volumeRange?.value || 0.6);
+
+  function applyVolume(nextVolume) {
+    if (!gVideo) return;
+    volume = Math.max(0, Math.min(1, Number(nextVolume)));
+    gVideo.volume = volume;
+    if (audioEnabled) gVideo.muted = volume === 0;
+    if (gAudio) gAudio.volume = volume;
+  }
+
+  function startPlayback(withAudio) {
+    if (!gVideo || !mediaWrap) return;
+    const wantsAudio = Boolean(withAudio && audioUnlocked);
+    gVideo.volume = volume;
+
+    if (wantsAudio) {
+      audioEnabled = true;
+      gVideo.muted = volume === 0;
+      const playAttempt = gVideo.play();
+      if (playAttempt && typeof playAttempt.catch === 'function') {
+        playAttempt.catch(() => {
+          showToast('Audio blocked — click again to enable');
+        });
+      }
+      if (gAudio) {
+        gAudio.currentTime = gVideo.currentTime || 0;
+        const audioAttempt = gAudio.play();
+        if (audioAttempt && typeof audioAttempt.catch === 'function') {
+          audioAttempt.catch(() => {
+            showToast('Audio blocked — click again to enable');
+          });
+        }
+      }
+    } else {
+      gVideo.muted = true;
+      const playAttempt = gVideo.play();
+      if (playAttempt && typeof playAttempt.catch === 'function') {
+        playAttempt.catch(() => {});
+      }
+    }
+
+    mediaWrap.classList.add('is-playing');
+  }
+
+  function startAudioIfPlaying() {
+    if (!gVideo || !gAudio) return;
+    if (gVideo.paused) return;
+    gVideo.muted = volume === 0;
+    gAudio.volume = volume;
+    gAudio.currentTime = gVideo.currentTime || 0;
+    const audioAttempt = gAudio.play();
+    if (audioAttempt && typeof audioAttempt.catch === 'function') {
+      audioAttempt.catch(() => {
+        showToast('Audio blocked — click again to enable');
+      });
+    }
+  }
+
+  function stopPlayback() {
+    if (!gVideo || !mediaWrap) return;
+    gVideo.pause();
+    gVideo.currentTime = 0;
+    if (gAudio) {
+      gAudio.pause();
+      gAudio.currentTime = 0;
+    }
+    if (!audioEnabled) gVideo.muted = true;
+    mediaWrap.classList.remove('is-playing');
+  }
+
+  function unlockAudio() {
+    audioUnlocked = true;
+    audioEnabled = true;
+    startAudioIfPlaying();
+    soundToggle?.classList.add('is-hidden');
+  }
+
+  document.addEventListener('pointerdown', unlockAudio, { once: true });
+
+  hero?.addEventListener('mouseenter', () => startPlayback(true));
+  hero?.addEventListener('mouseleave', stopPlayback);
+  hero?.addEventListener('dblclick', () => {
+    unlockAudio();
+    startPlayback(true);
+  });
+  hero?.addEventListener('click', () => {
+    unlockAudio();
+    startPlayback(true);
+  });
+  hero?.addEventListener('touchstart', () => startPlayback(true), { passive: true });
+
+  mediaWrap?.addEventListener('click', () => startPlayback(true), true);
+  soundToggle?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    unlockAudio();
+    startPlayback(true);
+  });
+
+  volumeRange?.addEventListener('input', (e) => {
+    audioEnabled = true;
+    applyVolume(e.target.value);
+    if (gVideo) gVideo.muted = volume === 0;
+  });
 
   gFacts.innerHTML = info.facts
     .map(([k, v]) => `<li><span>${k}</span><strong>${v}</strong></li>`)
@@ -499,10 +612,71 @@ mobileMenuBtn?.addEventListener('click', () => {
   gAbout.textContent = info.about;
 
   followBtn.addEventListener('click', () => {
-    const saved = safeParse(localStorage.getItem('necs_followed_games') || '[]', []);
-    if (!saved.includes(g)) saved.push(g);
-    localStorage.setItem('necs_followed_games', JSON.stringify(saved));
-    showToast('Following: ' + info.title);
+    window.location.href = 'follow.html?g=' + encodeURIComponent(g);
+  });
+})();
+
+// ==============================
+// ===== Follow Updates Page Init =====
+// ==============================
+(function initFollowPage() {
+  const form = document.getElementById('followForm');
+  const nameEl = document.getElementById('followName');
+  const emailEl = document.getElementById('followEmail');
+  const phoneEl = document.getElementById('followPhone');
+  const gameEl = document.getElementById('followGame');
+  const emailOpt = document.getElementById('followEmailOpt');
+  const smsOpt = document.getElementById('followSmsOpt');
+  const gameLabel = document.getElementById('followGameLabel');
+  const backLink = document.getElementById('followBack');
+
+  if (!form || !gameEl) return;
+
+  const params = new URLSearchParams(location.search);
+  const g = (params.get('g') || '').toLowerCase();
+  const gameNames = {
+    valorant: 'Valorant Champions',
+    rocket: 'Rocket League',
+    smash: 'Smash Invitational'
+  };
+
+  if (g && gameNames[g]) {
+    gameEl.value = g;
+    if (gameLabel) gameLabel.textContent = gameNames[g];
+    if (backLink) backLink.href = 'game.html?g=' + encodeURIComponent(g);
+  }
+
+  function validEmail(value) {
+    return value.includes('@') && value.includes('.');
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = (nameEl?.value || '').trim();
+    const email = (emailEl?.value || '').trim();
+    const phone = (phoneEl?.value || '').trim();
+    const wantsEmail = Boolean(emailOpt?.checked);
+    const wantsSms = Boolean(smsOpt?.checked);
+
+    if (!email && !phone) return showToast('Enter email or phone');
+    if (email && !validEmail(email)) return showToast('Enter a valid email');
+    if (!wantsEmail && !wantsSms) return showToast('Pick email or text updates');
+
+    const payload = {
+      name,
+      email,
+      phone,
+      game: gameEl.value,
+      wantsEmail,
+      wantsSms,
+      createdAt: Date.now()
+    };
+
+    localStorage.setItem('necs_follow_signup', JSON.stringify(payload));
+    form.reset();
+    gameEl.value = g && gameNames[g] ? g : '';
+    if (emailOpt) emailOpt.checked = true;
+    showToast('You are on the list!');
   });
 })();
 // ===== Confirmation Page Init (NO canvas / no QR) =====

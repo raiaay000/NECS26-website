@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NECS 2026 | Updates</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="follow.css" />
+</head>
+
+<body class="page-simple">
+  <main class="simple-wrap follow-wrap" id="main">
+    <header class="simple-header">
+      <a class="simple-back" id="followBack" href="index.html#games">← Back to Games</a>
+      <h1 class="simple-title">Follow Updates</h1>
+      <p class="simple-sub">Get match drops, schedule reminders, and merch alerts for <span id="followGameLabel">NECS 2026</span>.</p>
+    </header>
+
+    <div class="follow-layout">
+      <section class="simple-card">
+        <h2 class="simple-h2">Stay in the loop</h2>
+
+        <form id="followForm" class="follow-form" autocomplete="on">
+          <div class="form-grid">
+            <label class="field">
+              <span>Name</span>
+              <input id="followName" type="text" placeholder="Your name" />
+            </label>
+            <label class="field">
+              <span>Email</span>
+              <input id="followEmail" type="email" placeholder="you@email.com" />
+            </label>
+            <label class="field">
+              <span>Phone</span>
+              <input id="followPhone" type="tel" placeholder="(555) 555-5555" />
+            </label>
+            <label class="field">
+              <span>Game</span>
+              <select id="followGame">
+                <option value="">All games</option>
+                <option value="valorant">Valorant</option>
+                <option value="rocket">Rocket League</option>
+                <option value="smash">Smash</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="checkbox-row">
+            <label class="check">
+              <input id="followEmailOpt" type="checkbox" checked />
+              <span>Email updates</span>
+            </label>
+            <label class="check">
+              <input id="followSmsOpt" type="checkbox" />
+              <span>Text updates</span>
+            </label>
+          </div>
+
+          <p class="follow-note">No spam. Unsubscribe anytime. Standard messaging rates may apply.</p>
+
+          <div class="btn-row">
+            <button class="btn btn-primary" type="submit">Enable updates</button>
+            <a class="btn btn-outline" href="index.html#schedule">View Schedule</a>
+          </div>
+        </form>
+      </section>
+
+      <aside class="simple-card follow-aside">
+        <h2 class="simple-h2">What you’ll get</h2>
+        <ul class="follow-list">
+          <li>Match time alerts + stage changes</li>
+          <li>Team announcements and bracket drops</li>
+          <li>Limited merch and ticket restocks</li>
+          <li>On-site activations + meetups</li>
+        </ul>
+
+        <div class="follow-pill">NECS 2026 • Nashville</div>
+      </aside>
+    </div>
+
+    <div class="toast" id="toast">Saved</div>
+  </main>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
