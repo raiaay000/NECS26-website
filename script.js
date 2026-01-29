@@ -10,6 +10,27 @@
 // Small helpers
 // ==============================
 const CART_KEY = 'necs_cart'; // keep your original key so nothing breaks
+let cartReady = false;
+let pendingCartHydrate = null;
+let pendingBackendPull = false;
+let pendingBackendPush = false;
+
+const BACKEND_BASE_URL = 'http://localhost:8787';
+
+function requestCartHydration(options = {}) {
+  pendingCartHydrate = options;
+  if (cartReady) hydrateCartForUser(pendingCartHydrate);
+}
+
+function requestBackendPull() {
+  pendingBackendPull = true;
+  if (cartReady) void pullBackendState();
+}
+
+function requestBackendPush() {
+  pendingBackendPush = true;
+  if (cartReady) void pushBackendState();
+}
 
 function safeParse(json, fallback) {
   try { return JSON.parse(json); } catch { return fallback; }
@@ -41,6 +62,10 @@ let authUser = safeParse(localStorage.getItem(AUTH_USER_KEY) || 'null', null);
 const authLoginBtn = byId('authLoginBtn');
 const authLoginLabel = byId('authLoginLabel');
 const authMenu = byId('authMenu');
+const authMenuRemindersBtn = byId('authMenuRemindersBtn');
+const authMenuFavoritesBtn = byId('authMenuFavoritesBtn');
+const authMenuFollowedTeamsBtn = byId('authMenuFollowedTeamsBtn');
+const authMenuFollowedPlayersBtn = byId('authMenuFollowedPlayersBtn');
 const authMenuLogoutBtn = byId('authMenuLogoutBtn');
 
 function cacheAuthUser(user) {
@@ -65,6 +90,72 @@ function userScopedKey(base) {
 
 function currentUserLabel() {
   return authUser?.displayName || authUser?.email || '';
+}
+
+function canSyncBackend() {
+  return currentUserId() !== 'guest';
+}
+
+async function backendFetch(path, options) {
+  try {
+    const res = await fetch(`${BACKEND_BASE_URL}${path}`, options);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+function mergeRemindersByKey(baseList = [], extraList = []) {
+  const map = new Map();
+  [...baseList, ...extraList].forEach((r) => {
+    if (!r || typeof r.key !== 'string') return;
+    map.set(r.key, r);
+  });
+  return Array.from(map.values()).sort((a, b) => Number(a.startsAt || 0) - Number(b.startsAt || 0));
+}
+
+function mergeStringSets(baseList = [], extraList = []) {
+  return Array.from(new Set([...(baseList || []), ...(extraList || [])]));
+}
+
+async function pullBackendState() {
+  pendingBackendPull = false;
+  if (!cartReady || !canSyncBackend()) return;
+  const uid = currentUserId();
+  const data = await backendFetch(`/api/state?uid=${encodeURIComponent(uid)}`);
+  if (!data) return;
+
+  // Merge backend state with local state, preferring "union" behavior.
+  const mergedCart = mergeCartInto(data.cart || {}, cart || {});
+  const mergedReminders = mergeRemindersByKey(data.reminders || [], getReminders());
+  const mergedMusicLikes = mergeStringSets(data.musicLikes || [], getMusicLikes());
+
+  cart = mergedCart;
+  saveCart();
+  saveReminders(mergedReminders);
+  saveMusicLikes(mergedMusicLikes);
+  renderCart();
+  renderReminderBadges(mergedReminders);
+  renderSongLikes(mergedMusicLikes);
+
+  // Push merged state back so backend matches the latest union.
+  requestBackendPush();
+}
+
+async function pushBackendState() {
+  pendingBackendPush = false;
+  if (!cartReady || !canSyncBackend()) return;
+  const uid = currentUserId();
+  await backendFetch(`/api/state?uid=${encodeURIComponent(uid)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      cart,
+      reminders: getReminders(),
+      musicLikes: getMusicLikes()
+    })
+  });
 }
 
 function updateAuthUI() {
@@ -106,6 +197,28 @@ function initAuthMenu() {
     e.stopPropagation();
   });
 
+  authMenuRemindersBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeAuthMenu();
+  });
+
+  authMenuFavoritesBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeAuthMenu();
+  });
+
+  authMenuFollowedTeamsBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeAuthMenu();
+    showToast('Showing followed teams');
+  });
+
+  authMenuFollowedPlayersBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeAuthMenu();
+    showToast('Showing followed players');
+  });
+
   document.addEventListener('click', () => {
     closeAuthMenu();
   });
@@ -131,6 +244,9 @@ function initFirebaseAuth() {
     authMenuLogoutBtn?.addEventListener('click', () => {
       cacheAuthUser(null);
       closeAuthMenu();
+      requestCartHydration({ mergeGuest: false });
+      hydrateMusicLikesForUser({ mergeGuest: false });
+      hydrateFollowStateForUser({ mergeGuest: false });
       updateAuthUI();
       renderReminderBadges();
     });
@@ -163,6 +279,10 @@ function initFirebaseAuth() {
 
     auth.onAuthStateChanged((user) => {
       cacheAuthUser(user);
+      requestCartHydration({ mergeGuest: true });
+      hydrateMusicLikesForUser({ mergeGuest: true });
+      hydrateFollowStateForUser({ mergeGuest: true });
+      requestBackendPull();
       updateAuthUI();
       renderReminderBadges();
     });
@@ -246,8 +366,37 @@ const tickets = {
   'merch-bundle': { name: 'Merch Bundle', price: 199, desc: 'All three merch items in one bundle' }
 };
 
+const CART_BASE_KEY = CART_KEY;
+
+function cartKeyFor(userId = currentUserId()) {
+  return `${CART_BASE_KEY}:${userId}`;
+}
+
+function readCart(userId = currentUserId()) {
+  const key = cartKeyFor(userId);
+  const raw = localStorage.getItem(key);
+  if (raw) return safeParse(raw, {}) || {};
+
+  // one-time migration for existing carts saved under the legacy key
+  if (userId === 'guest') {
+    const legacyRaw = localStorage.getItem(CART_BASE_KEY);
+    if (legacyRaw) {
+      const legacyCart = safeParse(legacyRaw, {}) || {};
+      localStorage.setItem(key, JSON.stringify(legacyCart));
+      localStorage.removeItem(CART_BASE_KEY);
+      return legacyCart;
+    }
+  }
+
+  return {};
+}
+
+function writeCart(cartObj, userId = currentUserId()) {
+  localStorage.setItem(cartKeyFor(userId), JSON.stringify(cartObj || {}));
+}
+
 // cart is still an object like before: { day: 2, vip: 1 }
-let cart = safeParse(localStorage.getItem(CART_KEY), {}) || {};
+let cart = readCart();
 
 // elements (home page)
 const cartBtn = byId('cartBtn');
@@ -260,7 +409,36 @@ const cartTotal = byId('cartTotal');
 const checkoutBtn = byId('checkoutBtn');
 
 function saveCart() {
-  localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  writeCart(cart);
+  if (canSyncBackend()) requestBackendPush();
+}
+
+function mergeCartInto(baseCart, extraCart) {
+  const merged = { ...(baseCart || {}) };
+  Object.entries(extraCart || {}).forEach(([id, qty]) => {
+    const nQty = Number(qty || 0);
+    if (!nQty || !tickets[id]) return;
+    merged[id] = (Number(merged[id]) || 0) + nQty;
+  });
+  return merged;
+}
+
+function hydrateCartForUser({ mergeGuest = true } = {}) {
+  const userId = currentUserId();
+  let nextCart = readCart(userId);
+
+  if (userId !== 'guest' && mergeGuest) {
+    const guestCart = readCart('guest');
+    const hasGuestItems = cartEntries(guestCart).length > 0;
+    if (hasGuestItems) {
+      nextCart = mergeCartInto(nextCart, guestCart);
+      localStorage.removeItem(cartKeyFor('guest'));
+    }
+  }
+
+  cart = nextCart;
+  saveCart();
+  renderCart();
 }
 
 function cartEntries(cartObj = cart) {
@@ -387,10 +565,17 @@ checkoutBtn?.addEventListener('click', () => {
 });
 
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeCart();
+  if (e.key !== 'Escape') return;
+  closeCart();
+  if (eventModal?.classList.contains('open')) eventModal.classList.remove('open');
+  if (venueVideoModal?.classList.contains('open')) closeVenueVideo();
 });
 
 renderCart();
+cartReady = true;
+if (pendingCartHydrate) hydrateCartForUser(pendingCartHydrate);
+if (pendingBackendPull) void pullBackendState();
+if (pendingBackendPush) void pushBackendState();
 
 // ==============================
 // event modal (KEEP)
@@ -498,6 +683,7 @@ function getReminders() {
 
 function saveReminders(reminders) {
   localStorage.setItem(remindersKey(), JSON.stringify(reminders));
+  if (canSyncBackend()) requestBackendPush();
 }
 
 function reminderSetFor(eventEl, reminders = getReminders()) {
@@ -510,13 +696,15 @@ function renderReminderBadges(reminders = getReminders()) {
     const hasReminder = reminderSetFor(eventEl, reminders);
     eventEl.classList.toggle('has-reminder', hasReminder);
 
+    const gameBadge = eventEl.querySelector('.event-badge');
+    if (gameBadge) gameBadge.hidden = hasReminder;
+
     const existing = eventEl.querySelector('.event-reminder');
     if (hasReminder && !existing) {
       const badge = document.createElement('span');
       badge.className = 'event-reminder';
-      badge.textContent = 'Reminder Set';
+      badge.textContent = '★';
       badge.setAttribute('aria-label', 'Reminder set');
-      const gameBadge = eventEl.querySelector('.event-badge');
       if (gameBadge) eventEl.insertBefore(badge, gameBadge);
       else eventEl.appendChild(badge);
     }
@@ -527,7 +715,7 @@ function renderReminderBadges(reminders = getReminders()) {
 function updateReminderButton(eventEl) {
   if (!modalNotify) return;
   const reminderSet = reminderSetFor(eventEl);
-  modalNotify.textContent = reminderSet ? 'Reminder Set' : 'Set Reminder';
+  modalNotify.textContent = reminderSet ? 'Remove Reminder' : 'Set Reminder';
 }
 
 function setReminder(eventEl) {
@@ -535,11 +723,17 @@ function setReminder(eventEl) {
   if (!start) return showToast('Reminder not available for this event');
   const key = reminderKey(eventEl);
   const reminders = getReminders();
-  if (reminders.some((r) => r.key === key)) {
-    showToast('Reminder already set');
+  const existingIndex = reminders.findIndex((r) => r.key === key);
+
+  if (existingIndex >= 0) {
+    reminders.splice(existingIndex, 1);
+    saveReminders(reminders);
+    renderReminderBadges(reminders);
     updateReminderButton(eventEl);
+    showToast('Reminder removed');
     return;
   }
+
   reminders.push({
     key,
     title: eventEl.dataset.event || 'NECS Event',
@@ -618,29 +812,32 @@ function initScheduleFilters() {
 initScheduleFilters();
 renderReminderBadges();
 
-qsa('.schedule-event').forEach(event => {
-  event.addEventListener('click', () => {
-    if (!eventModal || !modalTitle || !modalTime || !modalStage) return;
+function openEventModal(eventEl) {
+  if (!eventModal || !modalTitle || !modalTime || !modalStage || !eventEl) return;
+  modalTitle.textContent = eventEl.dataset.event || '';
+  modalTime.textContent = eventEl.dataset.time || '';
+  modalStage.textContent = eventEl.dataset.stage || '';
+  currentScheduleEvent = eventEl;
+  updateReminderButton(eventEl);
+  eventModal.classList.add('open');
+}
 
-    const eventName = event.dataset.event;
-    const time = event.dataset.time;
-    const stage = event.dataset.stage;
+function closeEventModal() {
+  eventModal?.classList.remove('open');
+}
 
-    modalTitle.textContent = eventName;
-    modalTime.textContent = time;
-    modalStage.textContent = stage;
-    currentScheduleEvent = event;
-    updateReminderButton(event);
-    eventModal.classList.add('open');
-  });
+document.addEventListener('click', (e) => {
+  const eventEl = e.target.closest('.schedule-event');
+  if (!eventEl) return;
+  openEventModal(eventEl);
 });
 
 modalClose?.addEventListener('click', () => {
-  eventModal?.classList.remove('open');
+  closeEventModal();
 });
 
 eventModal?.addEventListener('click', (e) => {
-  if (e.target === eventModal) eventModal.classList.remove('open');
+  if (e.target === eventModal) closeEventModal();
 });
 
 modalNotify?.addEventListener('click', () => {
@@ -651,6 +848,116 @@ modalNotify?.addEventListener('click', () => {
 modalCalendar?.addEventListener('click', () => {
   if (!currentScheduleEvent) return;
   addEventToCalendar(currentScheduleEvent);
+});
+
+// ==============================
+// venue video modal
+// ==============================
+const venueVideoModal = byId('venueVideoModal');
+const venueVideoTrigger = byId('venueVideoTrigger');
+const venueVideoCloseBtn = byId('venueVideoCloseBtn');
+const venueVideo = byId('venueVideo');
+const venueVideoSpeed = byId('venueVideoSpeed');
+const venueChapterButtons = qsa('.venue-chapter');
+const venueVideoTag = byId('venueVideoTag');
+let venueSegments = [];
+const venueSkipRanges = [
+  { start: 15, end: 35 }
+];
+
+function buildVenueSegments() {
+  const points = venueChapterButtons
+    .map((btn) => ({
+      label: (btn.textContent || '').trim(),
+      start: Number(btn.dataset.time || 0)
+    }))
+    .filter((p) => Number.isFinite(p.start))
+    .sort((a, b) => a.start - b.start);
+
+  venueSegments = points.map((point, idx) => ({
+    label: point.label || 'Section',
+    start: point.start,
+    end: points[idx + 1] ? points[idx + 1].start : Infinity
+  }));
+}
+
+function updateVenueOverlay(time) {
+  if (!venueVideoTag || !venueSegments.length) return;
+  const current = venueSegments.find((seg) => time >= seg.start && time < seg.end);
+  if (current && venueVideoTag.textContent !== current.label) {
+    venueVideoTag.textContent = current.label;
+  }
+}
+
+function openVenueVideo() {
+  if (!venueVideoModal || !venueVideo) return;
+  venueVideo.muted = true;
+  venueVideo.volume = 0;
+  venueVideo.playbackRate = Number(venueVideoSpeed?.value || 1);
+  venueVideoModal.classList.add('open');
+  venueVideoModal.setAttribute('aria-hidden', 'false');
+  venueVideo.play().catch(() => {});
+  updateVenueOverlay(venueVideo.currentTime || 0);
+}
+
+function closeVenueVideo() {
+  if (!venueVideoModal || !venueVideo) return;
+  venueVideo.pause();
+  venueVideo.currentTime = 0;
+  venueVideoModal.classList.remove('open');
+  venueVideoModal.setAttribute('aria-hidden', 'true');
+}
+
+venueVideoTrigger?.addEventListener('click', openVenueVideo);
+venueVideoTrigger?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    openVenueVideo();
+  }
+});
+
+venueVideoCloseBtn?.addEventListener('click', closeVenueVideo);
+venueVideoModal?.addEventListener('click', (e) => {
+  if (e.target === venueVideoModal) closeVenueVideo();
+});
+
+venueVideoSpeed?.addEventListener('change', () => {
+  if (!venueVideo) return;
+  venueVideo.playbackRate = Number(venueVideoSpeed.value || 1);
+});
+
+buildVenueSegments();
+
+venueVideo?.addEventListener('loadedmetadata', () => {
+  updateVenueOverlay(venueVideo?.currentTime || 0);
+});
+
+venueVideo?.addEventListener('timeupdate', () => {
+  if (!venueVideo) return;
+  const currentTime = venueVideo.currentTime || 0;
+  const skip = venueSkipRanges.find((range) => currentTime >= range.start && currentTime < range.end);
+  if (skip) {
+    venueVideo.currentTime = skip.end;
+    updateVenueOverlay(skip.end);
+    return;
+  }
+  updateVenueOverlay(currentTime);
+});
+
+venueChapterButtons.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    if (!venueVideo) return;
+    const time = Number(btn.dataset.time || 0);
+    if (Number.isFinite(time) && time >= 0) {
+      venueVideo.currentTime = time;
+      updateVenueOverlay(time);
+      if (venueVideoModal && !venueVideoModal.classList.contains('open')) {
+        openVenueVideo();
+      } else {
+        venueVideo.play().catch(() => {});
+      }
+    }
+  });
 });
 
 // ==============================
@@ -667,12 +974,296 @@ qsa('.game-card').forEach(card => {
 // ==============================
 // team card clicks (KEEP)
 // ==============================
-qsa('.team-card').forEach(card => {
-  card.addEventListener('click', () => {
-    const teamName = card.querySelector('h3')?.textContent || 'team';
-    showToast('Viewing ' + teamName + ' roster');
+const TEAM_ROSTERS = {
+  Sentinels: {
+    game: 'Valorant',
+    region: 'North America',
+    players: [
+      { name: 'TenZ', role: 'Duelist', stats: { Rating: '1.18', 'ACS': '238', 'K/D': '1.22' } },
+      { name: 'Zekken', role: 'Entry', stats: { Rating: '1.12', 'ACS': '224', 'K/D': '1.15' } },
+      { name: 'Johnqt', role: 'IGL', stats: { Rating: '1.05', 'ACS': '198', 'K/D': '1.04' } },
+      { name: 'bang', role: 'Flex', stats: { Rating: '1.08', 'ACS': '210', 'K/D': '1.10' } },
+      { name: 'Sacy', role: 'Support', stats: { Rating: '1.03', 'ACS': '185', 'K/D': '1.02' } }
+    ]
+  },
+  LOUD: {
+    game: 'Valorant',
+    region: 'Brazil',
+    players: [
+      { name: 'aspas', role: 'Duelist', stats: { Rating: '1.20', 'ACS': '241', 'K/D': '1.26' } },
+      { name: 'Less', role: 'Controller', stats: { Rating: '1.11', 'ACS': '206', 'K/D': '1.14' } },
+      { name: 'tuyz', role: 'Sentinel', stats: { Rating: '1.07', 'ACS': '199', 'K/D': '1.09' } },
+      { name: 'cauanzin', role: 'Initiator', stats: { Rating: '1.10', 'ACS': '214', 'K/D': '1.12' } },
+      { name: 'qck', role: 'Flex', stats: { Rating: '1.04', 'ACS': '195', 'K/D': '1.03' } }
+    ]
+  },
+  'G2 Esports': {
+    game: 'Rocket League',
+    region: 'Europe',
+    players: [
+      { name: 'Jknaps', role: 'Striker', stats: { 'Goals/Game': '1.1', 'Assists/Game': '0.7', 'Saves/Game': '1.3' } },
+      { name: 'Chicago', role: 'Playmaker', stats: { 'Goals/Game': '0.9', 'Assists/Game': '0.9', 'Saves/Game': '1.0' } },
+      { name: 'Atomic', role: 'Hybrid', stats: { 'Goals/Game': '1.0', 'Assists/Game': '0.8', 'Saves/Game': '1.1' } }
+    ]
+  },
+  'NRG Esports': {
+    game: 'Rocket League',
+    region: 'North America',
+    players: [
+      { name: 'jstn', role: 'Striker', stats: { 'Goals/Game': '1.2', 'Assists/Game': '0.6', 'Saves/Game': '1.1' } },
+      { name: 'Squishy', role: 'Support', stats: { 'Goals/Game': '0.8', 'Assists/Game': '0.9', 'Saves/Game': '1.4' } },
+      { name: 'GarrettG', role: 'Captain', stats: { 'Goals/Game': '0.9', 'Assists/Game': '0.8', 'Saves/Game': '1.2' } }
+    ]
+  },
+  'T1 Esports': {
+    game: 'Smash Ultimate',
+    region: 'Mexico',
+    players: [
+      { name: 'MkLeo', role: 'Main: Joker', stats: { 'Win %': '71', 'Avg. Place': '2.1', 'Clutch': 'A' } }
+    ]
+  },
+  'Team Falcons': {
+    game: 'Smash Ultimate',
+    region: 'Mexico',
+    players: [
+      { name: 'Sparg0', role: 'Main: Cloud', stats: { 'Win %': '69', 'Avg. Place': '2.4', 'Edgeguard': 'A+' } }
+    ]
+  }
+};
+
+const TEAM_FAVORITES_KEY = 'necs_favorite_teams';
+const PLAYER_FAVORITES_KEY = 'necs_favorite_players';
+
+const teamRosterModal = byId('teamRosterModal');
+const rosterModalClose = byId('rosterModalClose');
+const rosterTeamName = byId('rosterTeamName');
+const rosterTeamMeta = byId('rosterTeamMeta');
+const rosterTeamFavoriteBtn = byId('rosterTeamFavoriteBtn');
+const rosterList = byId('rosterList');
+let currentRosterTeam = '';
+
+function favoritesKeyFor(baseKey, userId = currentUserId()) {
+  return `${baseKey}:${userId}`;
+}
+
+function getFavoriteTeams(userId = currentUserId()) {
+  return safeParse(localStorage.getItem(favoritesKeyFor(TEAM_FAVORITES_KEY, userId)) || '[]', []);
+}
+
+function getFavoritePlayers(userId = currentUserId()) {
+  return safeParse(localStorage.getItem(favoritesKeyFor(PLAYER_FAVORITES_KEY, userId)) || '[]', []);
+}
+
+function saveFavoriteTeams(list, userId = currentUserId()) {
+  localStorage.setItem(favoritesKeyFor(TEAM_FAVORITES_KEY, userId), JSON.stringify(list));
+}
+
+function saveFavoritePlayers(list, userId = currentUserId()) {
+  localStorage.setItem(favoritesKeyFor(PLAYER_FAVORITES_KEY, userId), JSON.stringify(list));
+}
+
+function teamIsFavorite(teamName, favorites = getFavoriteTeams()) {
+  return favorites.includes(teamName);
+}
+
+function playerKey(teamName, playerName) {
+  return `${teamName}|${playerName}`;
+}
+
+function playerIsFavorite(teamName, playerName, favorites = getFavoritePlayers()) {
+  return favorites.includes(playerKey(teamName, playerName));
+}
+
+function toggleTeamFavorite(teamName) {
+  const favorites = getFavoriteTeams();
+  const idx = favorites.indexOf(teamName);
+  if (idx >= 0) favorites.splice(idx, 1);
+  else favorites.push(teamName);
+  saveFavoriteTeams(favorites);
+  renderTeamFollowButton(teamName, favorites);
+  updateFollowIndicators(favorites);
+  updateFollowMenuLabels();
+  showToast(idx >= 0 ? 'Unfollowed team' : 'Following team');
+}
+
+function togglePlayerFavorite(teamName, playerName) {
+  const favorites = getFavoritePlayers();
+  const key = playerKey(teamName, playerName);
+  const idx = favorites.indexOf(key);
+  if (idx >= 0) favorites.splice(idx, 1);
+  else favorites.push(key);
+  saveFavoritePlayers(favorites);
+  renderRosterPlayers(teamName);
+  updateFollowMenuLabels();
+  showToast(idx >= 0 ? `Unfollowed ${playerName}` : `Following ${playerName}`);
+}
+
+function renderTeamFollowButton(teamName, favorites = getFavoriteTeams()) {
+  if (!rosterTeamFavoriteBtn) return;
+  const followed = favorites.includes(teamName);
+  rosterTeamFavoriteBtn.classList.toggle('is-favorite', followed);
+  rosterTeamFavoriteBtn.setAttribute('aria-pressed', followed ? 'true' : 'false');
+  rosterTeamFavoriteBtn.textContent = followed ? 'Following' : 'Follow Team';
+}
+
+function rosterFallbackPlayers(card) {
+  const names = qsa('.roster-player', card)
+    .map((el) => el.textContent.trim())
+    .filter(Boolean);
+  return names.map((name) => ({
+    name,
+    icon: playerIconFor(name),
+    role: 'Player',
+    stats: { 'Form': '—', 'Impact': '—', 'Clutch': '—' }
+  }));
+}
+
+function playerIconFor(name = '') {
+  const cleaned = name.replace(/[^a-z0-9]/gi, '').toUpperCase();
+  if (!cleaned) return '??';
+  if (cleaned.length === 1) return cleaned + cleaned;
+  return cleaned.slice(0, 2);
+}
+
+function playerIconBackground(name = '') {
+  let hash = 0;
+  for (let i = 0; i < name.length; i += 1) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = Math.abs(hash) % 360;
+  return `linear-gradient(135deg, hsl(${hue} 75% 70%), hsl(${(hue + 35) % 360} 70% 55%))`;
+}
+
+function renderRosterPlayers(teamName) {
+  if (!rosterList) return;
+  const teamData = TEAM_ROSTERS[teamName];
+  const players = teamData?.players || [];
+  const favorites = getFavoritePlayers();
+
+  rosterList.innerHTML = players.map((player) => {
+    const isFav = favorites.includes(playerKey(teamName, player.name));
+    const iconText = player.icon || playerIconFor(player.name);
+    const iconBg = player.iconBg || playerIconBackground(player.name);
+    const statsHtml = Object.entries(player.stats || {}).map(([key, value]) =>
+      `<span class="roster-stat">${key}: ${value}</span>`
+    ).join('');
+
+    return (
+      '<div class="roster-player-row">' +
+        '<div class="roster-player-info">' +
+          '<div class="roster-avatar" style="background:' + iconBg + '" aria-hidden="true">' + iconText + '</div>' +
+          '<div class="roster-player-text">' +
+            '<div class="roster-player-name">' + player.name + '</div>' +
+            '<div class="roster-player-role">' + (player.role || 'Player') + '</div>' +
+            '<div class="roster-stats">' + statsHtml + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<button class="favorite-toggle' + (isFav ? ' is-favorite' : '') + '" data-player="' + player.name + '" aria-pressed="' + (isFav ? 'true' : 'false') + '" type="button">' +
+          (isFav ? 'Following' : 'Follow') +
+        '</button>' +
+      '</div>'
+    );
+  }).join('');
+}
+
+function openRosterModal(teamCard) {
+  if (!teamRosterModal || !rosterTeamName || !rosterTeamMeta) return;
+  const teamName = teamCard?.dataset.team || teamCard?.querySelector('h3')?.textContent?.trim() || 'Team';
+  const teamData = TEAM_ROSTERS[teamName];
+  if (!teamData) {
+    TEAM_ROSTERS[teamName] = {
+      game: teamCard?.dataset.game || '',
+      region: teamCard?.dataset.region || '',
+      players: rosterFallbackPlayers(teamCard)
+    };
+  }
+  const finalData = TEAM_ROSTERS[teamName];
+  const region = teamCard?.dataset.region || finalData?.region || 'Region';
+  const game = teamCard?.dataset.game || finalData?.game || 'Game';
+
+  currentRosterTeam = teamName;
+  rosterTeamName.textContent = teamName;
+  rosterTeamMeta.textContent = `${region} • ${game}`;
+  renderTeamFollowButton(teamName);
+  renderRosterPlayers(teamName);
+
+  teamRosterModal.classList.add('open');
+  teamRosterModal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeRosterModal() {
+  if (!teamRosterModal) return;
+  teamRosterModal.classList.remove('open');
+  teamRosterModal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+function updateFollowIndicators(favorites = getFavoriteTeams()) {
+  qsa('.team-card').forEach((card) => {
+    const teamName = card.dataset.team || card.querySelector('h3')?.textContent?.trim() || '';
+    const isFollowed = favorites.includes(teamName);
+    card.classList.toggle('is-following', isFollowed);
   });
+}
+
+function updateFollowMenuLabels() {
+  if (authMenuFollowedTeamsBtn) {
+    const count = getFavoriteTeams().length;
+    authMenuFollowedTeamsBtn.textContent = `Followed Teams (${count})`;
+  }
+  if (authMenuFollowedPlayersBtn) {
+    const count = getFavoritePlayers().length;
+    authMenuFollowedPlayersBtn.textContent = `Followed Players (${count})`;
+  }
+}
+
+function hydrateFollowStateForUser({ mergeGuest = true } = {}) {
+  const userId = currentUserId();
+  let teams = getFavoriteTeams(userId);
+  let players = getFavoritePlayers(userId);
+
+  if (userId !== 'guest' && mergeGuest) {
+    const guestTeams = getFavoriteTeams('guest');
+    const guestPlayers = getFavoritePlayers('guest');
+    if (guestTeams.length) {
+      teams = mergeStringSets(teams, guestTeams);
+      localStorage.removeItem(favoritesKeyFor(TEAM_FAVORITES_KEY, 'guest'));
+    }
+    if (guestPlayers.length) {
+      players = mergeStringSets(players, guestPlayers);
+      localStorage.removeItem(favoritesKeyFor(PLAYER_FAVORITES_KEY, 'guest'));
+    }
+  }
+
+  saveFavoriteTeams(teams, userId);
+  saveFavoritePlayers(players, userId);
+  updateFollowIndicators(teams);
+  updateFollowMenuLabels();
+}
+
+qsa('.team-card').forEach(card => {
+  card.addEventListener('click', () => openRosterModal(card));
 });
+
+rosterModalClose?.addEventListener('click', closeRosterModal);
+teamRosterModal?.addEventListener('click', (e) => {
+  if (e.target === teamRosterModal) closeRosterModal();
+});
+rosterTeamFavoriteBtn?.addEventListener('click', () => {
+  if (!currentRosterTeam) return;
+  toggleTeamFavorite(currentRosterTeam);
+});
+rosterList?.addEventListener('click', (e) => {
+  const btn = e.target.closest('.favorite-toggle');
+  if (!btn || !currentRosterTeam) return;
+  const playerName = btn.dataset.player;
+  if (!playerName) return;
+  togglePlayerFavorite(currentRosterTeam, playerName);
+});
+
+updateFollowIndicators();
+updateFollowMenuLabels();
 
 // ==============================
 // music tabs (KEEP)
@@ -695,12 +1286,106 @@ musicTabs.forEach(tab => {
 });
 
 // song clicks (KEEP)
-qsa('.song-item').forEach(item => {
+const MUSIC_LIKES_BASE_KEY = 'necs_music_likes';
+
+function musicLikesKeyFor(userId = currentUserId()) {
+  return `${MUSIC_LIKES_BASE_KEY}:${userId}`;
+}
+
+function getMusicLikes() {
+  return safeParse(localStorage.getItem(musicLikesKeyFor()) || '[]', []);
+}
+
+function saveMusicLikes(likes) {
+  localStorage.setItem(musicLikesKeyFor(), JSON.stringify(likes));
+  if (canSyncBackend()) requestBackendPush();
+}
+
+function songLikeKey(songEl) {
+  const list = songEl.closest('.music-list');
+  const tabId = list?.id || 'music';
+  const title = songEl.querySelector('.song-title')?.textContent?.trim() || 'song';
+  return `${tabId}|${title}`;
+}
+
+function isSongLiked(songEl, likes = getMusicLikes()) {
+  const key = songLikeKey(songEl);
+  return likes.includes(key);
+}
+
+function renderSongLikes(likes = getMusicLikes()) {
+  qsa('.song-item').forEach((songEl) => {
+    const heart = songEl.querySelector('.song-heart');
+    if (!heart) return;
+    const liked = isSongLiked(songEl, likes);
+    heart.classList.toggle('liked', liked);
+    heart.setAttribute('aria-pressed', liked ? 'true' : 'false');
+    heart.setAttribute('title', liked ? 'Remove from liked songs' : 'Like this song');
+    heart.innerHTML = '<span aria-hidden="true">♥</span>';
+  });
+}
+
+function toggleSongLike(songEl) {
+  const key = songLikeKey(songEl);
+  const likes = getMusicLikes();
+  const idx = likes.indexOf(key);
+  const title = songEl.querySelector('.song-title')?.textContent?.trim() || 'song';
+
+  if (idx >= 0) {
+    likes.splice(idx, 1);
+    saveMusicLikes(likes);
+    renderSongLikes(likes);
+    showToast(`Removed: ${title}`);
+    return;
+  }
+
+  likes.push(key);
+  saveMusicLikes(likes);
+  renderSongLikes(likes);
+  showToast(`Liked: ${title}`);
+}
+
+function hydrateMusicLikesForUser({ mergeGuest = true } = {}) {
+  const userId = currentUserId();
+  let nextLikes = getMusicLikes();
+
+  if (userId !== 'guest' && mergeGuest) {
+    const guestLikes = safeParse(localStorage.getItem(musicLikesKeyFor('guest')) || '[]', []);
+    if (guestLikes.length) {
+      nextLikes = mergeStringSets(nextLikes, guestLikes);
+      localStorage.removeItem(musicLikesKeyFor('guest'));
+    }
+  }
+
+  saveMusicLikes(nextLikes);
+  renderSongLikes(nextLikes);
+}
+
+// enhance songs with heart buttons + keep existing click toast
+qsa('.song-item').forEach((item) => {
+  if (!item.querySelector('.song-heart')) {
+    const heartBtn = document.createElement('button');
+    heartBtn.type = 'button';
+    heartBtn.className = 'song-heart';
+    heartBtn.setAttribute('aria-label', 'Like this song');
+    heartBtn.setAttribute('aria-pressed', 'false');
+    heartBtn.innerHTML = '<span aria-hidden="true">♥</span>';
+    item.appendChild(heartBtn);
+  }
+
+  const heart = item.querySelector('.song-heart');
+  heart?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleSongLike(item);
+  });
+
   item.addEventListener('click', () => {
     const title = item.querySelector('.song-title')?.textContent || 'song';
     showToast('Playing: ' + title);
   });
 });
+
+renderSongLikes();
 
 // mobile menu (KEEP)
 const mobileMenuBtn = byId('mobileMenuBtn');
@@ -729,7 +1414,7 @@ mobileMenuBtn?.addEventListener('click', () => {
 
   if (!summary || !totalEl || !payBtn) return; // not on checkout.html
 
-  const stored = safeParse(localStorage.getItem(CART_KEY) || '{}', {});
+  const stored = readCart();
   const { items, total, rowsHtml } = summarizeCart(stored);
 
   summary.innerHTML = items.length
@@ -756,7 +1441,7 @@ mobileMenuBtn?.addEventListener('click', () => {
   cardZip?.addEventListener('input', e => e.target.value = fmtZip(e.target.value));
 
   clearBtn?.addEventListener('click', () => {
-    localStorage.removeItem(CART_KEY);
+    localStorage.removeItem(cartKeyFor());
     cart = {};
     showToast('Cart cleared');
     setTimeout(() => window.location.href = 'index.html#tickets', 650);
@@ -795,7 +1480,7 @@ mobileMenuBtn?.addEventListener('click', () => {
     localStorage.setItem('necs_ticket_payload', JSON.stringify(payload));
 
     // clear cart after purchase
-    localStorage.removeItem(CART_KEY);
+    localStorage.removeItem(cartKeyFor());
     cart = {};
 
     window.location.href = 'confirmation.html';

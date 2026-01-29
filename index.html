@@ -6,6 +6,7 @@
   <title>NECS 2026 | National Esports Championship Series - Nashville</title>
   <meta name="description" content="The National Esports Championship Series 2026. May 6-10 at Bridgestone Arena, Nashville. $500,000 prize pool.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -28,7 +29,7 @@
   <nav class="nav" id="nav">
     <div class="nav-container">
       <a href="#" class="nav-brand">
-        <img class="nav-logo-img" src="images/necs-logo.png" alt="NECS logo">
+        <img class="nav-logo-img" src="images/necs-logo.png" alt="NECS logo" decoding="async" fetchpriority="high">
         <span class="nav-title">NECS 2026</span>
       </a>
 
@@ -55,6 +56,10 @@
             <span class="auth-user-chevron" aria-hidden="true">▾</span>
           </button>
           <div class="auth-menu" id="authMenu" role="menu" hidden>
+            <a class="auth-menu-item auth-menu-link" id="authMenuRemindersBtn" href="#schedule" role="menuitem">Your Reminders</a>
+            <a class="auth-menu-item auth-menu-link" id="authMenuFavoritesBtn" href="#music" role="menuitem">Favorite Songs</a>
+            <a class="auth-menu-item auth-menu-link" id="authMenuFollowedTeamsBtn" href="#teams" role="menuitem">Followed Teams</a>
+            <a class="auth-menu-item auth-menu-link" id="authMenuFollowedPlayersBtn" href="#teams" role="menuitem">Followed Players</a>
             <button class="auth-menu-item auth-menu-logout" id="authMenuLogoutBtn" type="button" role="menuitem">Log out</button>
           </div>
         </div>
@@ -103,6 +108,67 @@
       <div class="modal-actions">
         <button class="btn btn-outline modal-btn" id="modalCalendar" type="button">Add to Calendar</button>
         <button class="btn btn-primary modal-btn" id="modalNotify" type="button">Set Reminder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- team roster modal -->
+  <div class="modal-overlay" id="teamRosterModal" aria-hidden="true">
+    <div class="modal roster-modal">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title" id="rosterTeamName">Team Roster</h3>
+          <p class="roster-subtitle" id="rosterTeamMeta">Region • Game</p>
+        </div>
+        <div class="roster-header-actions">
+          <button class="btn btn-outline roster-fav-btn" id="rosterTeamFavoriteBtn" type="button">Follow Team</button>
+          <button class="modal-close" id="rosterModalClose" type="button" aria-label="Close roster">x</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="roster-list" id="rosterList"></div>
+        <p class="roster-note">Stats shown are season averages and recent form.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- venue video modal -->
+  <div class="modal-overlay" id="venueVideoModal" aria-hidden="true">
+    <div class="modal venue-video-modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Venue Video</h3>
+        <button class="modal-close" id="venueVideoCloseBtn" type="button" aria-label="Close video">x</button>
+      </div>
+      <div class="modal-body venue-video-body">
+        <div class="venue-video-wrapper">
+          <video
+            id="venueVideo"
+            class="venue-video"
+            playsinline
+            controls
+            muted
+            preload="metadata"
+            src="videos/videoplayback-2.mp4"
+          ></video>
+        </div>
+      </div>
+      <div class="modal-actions venue-video-actions">
+        <label class="venue-speed-control" for="venueVideoSpeed">
+          Speed
+          <select id="venueVideoSpeed">
+            <option value="0.75">0.75x</option>
+            <option value="1" selected>1x</option>
+            <option value="1.25">1.25x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2x</option>
+          </select>
+        </label>
+        <div class="venue-chapters" role="group" aria-label="Jump to important sections">
+          <button class="venue-chapter" type="button" data-time="0">Intro</button>
+          <button class="venue-chapter" type="button" data-time="35">Seating</button>
+          <button class="venue-chapter" type="button" data-time="55">Entrances</button>
+          <button class="venue-chapter" type="button" data-time="75">Parking</button>
+        </div>
       </div>
     </div>
   </div>
@@ -165,15 +231,15 @@
 
           <div class="game-showcase">
             <a href="#games" class="game-item">
-              <img class="game-item-img" src="images/img-1-f1a1305d46.png" alt="Valorant">
+              <img class="game-item-img" src="images/img-1-f1a1305d46.png" alt="Valorant" loading="lazy" decoding="async">
               <div class="game-name">Valorant</div>
             </a>
             <a href="#games" class="game-item">
-              <img class="game-item-img" src="images/img-2-828f7bcd7e.png" alt="Rocket League">
+              <img class="game-item-img" src="images/img-2-828f7bcd7e.png" alt="Rocket League" loading="lazy" decoding="async">
               <div class="game-name">Rocket League</div>
             </a>
             <a href="#games" class="game-item">
-              <img class="game-item-img" src="images/img-3-fcdd53f857.png" alt="Super Smash Bros Ultimate">
+              <img class="game-item-img" src="images/img-3-fcdd53f857.png" alt="Super Smash Bros Ultimate" loading="lazy" decoding="async">
               <div class="game-name">Smash</div>
             </a>
           </div>
@@ -228,7 +294,7 @@
       <div class="games-grid">
         <article class="game-card" id="valorantCard" data-game="valorant">
           <div class="game-card-header">
-            <img src="images/img-1-f1a1305d46.png" alt="Valorant">
+            <img src="images/img-1-f1a1305d46.png" alt="Valorant" loading="lazy" decoding="async">
             <h3 class="game-card-title">Valorant</h3>
           </div>
           <div class="game-card-body">
@@ -248,7 +314,7 @@
 
         <article class="game-card" id="rocketCard" data-game="rocket">
           <div class="game-card-header">
-            <img src="images/img-2-828f7bcd7e.png" alt="Rocket League">
+            <img src="images/img-2-828f7bcd7e.png" alt="Rocket League" loading="lazy" decoding="async">
             <h3 class="game-card-title">Rocket League</h3>
           </div>
           <div class="game-card-body">
@@ -268,7 +334,7 @@
 
         <article class="game-card" id="smashCard" data-game="smash">
           <div class="game-card-header">
-            <img src="images/img-3-fcdd53f857.png" alt="Super Smash Bros Ultimate">
+            <img src="images/img-3-fcdd53f857.png" alt="Super Smash Bros Ultimate" loading="lazy" decoding="async">
             <h3 class="game-card-title">Smash Ultimate</h3>
           </div>
           <div class="game-card-body">
@@ -301,7 +367,8 @@
         </div>
 
         <div class="teams-scroll">
-          <article class="team-card">
+          <article class="team-card" data-team="Sentinels" data-game="Valorant" data-region="North America">
+            <span class="team-follow-badge" aria-hidden="true">Following</span>
             <div class="team-header">
               <div class="team-logo">SEN</div>
               <div class="team-info">
@@ -319,7 +386,8 @@
             </div>
           </article>
 
-          <article class="team-card">
+          <article class="team-card" data-team="LOUD" data-game="Valorant" data-region="Brazil">
+            <span class="team-follow-badge" aria-hidden="true">Following</span>
             <div class="team-header">
               <div class="team-logo" style="background: linear-gradient(135deg, #00A859, #006837);">LLL</div>
               <div class="team-info">
@@ -337,7 +405,8 @@
             </div>
           </article>
 
-          <article class="team-card">
+          <article class="team-card" data-team="G2 Esports" data-game="Rocket League" data-region="Europe">
+            <span class="team-follow-badge" aria-hidden="true">Following</span>
             <div class="team-header">
               <div class="team-logo" style="background: linear-gradient(135deg, #FF0000, #CC0000);">G2</div>
               <div class="team-info">
@@ -353,7 +422,8 @@
             </div>
           </article>
 
-          <article class="team-card">
+          <article class="team-card" data-team="NRG Esports" data-game="Rocket League" data-region="North America">
+            <span class="team-follow-badge" aria-hidden="true">Following</span>
             <div class="team-header">
               <div class="team-logo" style="background: linear-gradient(135deg, #0066CC, #004499);">NRG</div>
               <div class="team-info">
@@ -369,7 +439,8 @@
             </div>
           </article>
 
-          <article class="team-card">
+          <article class="team-card" data-team="T1 Esports" data-game="Smash Ultimate" data-region="Mexico">
+            <span class="team-follow-badge" aria-hidden="true">Following</span>
             <div class="team-header">
               <div class="team-logo" style="background: linear-gradient(135deg, #E60012, #990000);">T1</div>
               <div class="team-info">
@@ -383,7 +454,8 @@
             </div>
           </article>
 
-          <article class="team-card">
+          <article class="team-card" data-team="Team Falcons" data-game="Smash Ultimate" data-region="Mexico">
+            <span class="team-follow-badge" aria-hidden="true">Following</span>
             <div class="team-header">
               <div class="team-logo" style="background: linear-gradient(135deg, #1A4D2E, #0D2818);">FLC</div>
               <div class="team-info">
@@ -442,6 +514,10 @@
           <button class="schedule-filter" data-filter="stage" data-value="side" type="button">Side</button>
           <button class="schedule-filter" data-filter="stage" data-value="other" type="button">Other</button>
         </div>
+      </div>
+
+      <div class="schedule-reminder-note">
+        Set reminders from any event. If you’re logged in, your reminders and cart will still be here next time.
       </div>
 
       <div class="schedule-grid">
@@ -632,8 +708,9 @@
         <p class="section-subtitle">Nashville's Premier Entertainment Venue</p>
       </div>
 
-      <div class="venue-image-container">
-        <img class="venue-image" src="images/img-4-9349c27fbb.png" alt="Bridgestone Arena interior during a concert">
+      <div class="venue-image-container" id="venueVideoTrigger" role="button" tabindex="0" aria-label="Play venue video">
+        <img class="venue-image" src="images/img-4-9349c27fbb.png" alt="Bridgestone Arena interior during a concert" loading="lazy" decoding="async">
+        <div class="venue-image-hint">Click to watch arena video</div>
       </div>
 
       <div class="venue-grid">
