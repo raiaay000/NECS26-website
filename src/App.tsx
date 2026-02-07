@@ -24,6 +24,8 @@ import { Onboarding } from './components/Onboarding';
 import { AuthModal } from './components/shared/AuthModal';
 import { UserMenu } from './components/shared/UserMenu';
 import { Home as HomeIcon, Users, Calendar, ShoppingBag, MapPin, Utensils, Music, Menu, X, ShoppingCart, Ticket, Trophy, Gamepad2, LogIn, Video, HelpCircle } from 'lucide-react';
+import { ResetOnboarding } from "./components/ResetOnboarding";
+
 
 interface CartItem { id: string; name: string; price: number; quantity: number; type: 'ticket' | 'merch'; }
 
@@ -134,6 +136,7 @@ function AppContent() {
 
   return (
     <div className="flex h-screen bg-black text-white">
+      <ResetOnboarding />
       {showOnboarding && <Onboarding onComplete={() => { setShowOnboarding(false); setTimeout(() => setMainFadeIn(true), 100); }} />}
       
       <div className={`contents transition-opacity duration-700 ${mainFadeIn ? 'opacity-100' : 'opacity-0'}`}>
