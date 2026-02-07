@@ -1,6 +1,6 @@
 export function ResetOnboarding() {
   const reset = () => {
-    localStorage.removeItem("hasCompletedOnboarding");
+    localStorage.removeItem("necs2026_onboarding_completed"); // correct key
     window.location.reload();
   };
 

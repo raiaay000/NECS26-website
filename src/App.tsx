@@ -113,7 +113,7 @@ function AppContent() {
     setLoginOpen(false);
   };
 
-  const pages: Record<string, JSX.Element> = {
+const pages: Record<string, React.ReactNode> = {
     home: <Home onNavigate={nav} />,
     games: <Games onGameSelect={(game) => nav(gameMap[game])} />,
     teams: <Teams />,
@@ -135,10 +135,12 @@ function AppContent() {
   };
 
   return (
-    <div className="flex h-screen bg-black text-white">
-      <ResetOnboarding />
-      {showOnboarding && <Onboarding onComplete={() => { setShowOnboarding(false); setTimeout(() => setMainFadeIn(true), 100); }} />}
-      
+  <div className="flex h-screen bg-black text-white">
+
+    <ResetOnboarding />
+
+    {showOnboarding && <Onboarding onComplete={() => { setShowOnboarding(false); setTimeout(() => setMainFadeIn(true), 100); }} />}
+
       <div className={`contents transition-opacity duration-700 ${mainFadeIn ? 'opacity-100' : 'opacity-0'}`}>
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className="fixed top-4 left-4 z-50 w-12 h-12 bg-[#0a0a0a]/80 backdrop-blur-md border border-[#1a1a1a]/50 rounded-lg flex items-center justify-center hover:bg-[#1a1a1a]/80 transition-colors">
           {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
