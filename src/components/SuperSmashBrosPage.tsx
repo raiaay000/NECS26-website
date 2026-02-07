@@ -1,4 +1,4 @@
-import smashImage from 'figma:asset/13106e410ec274380c5ed3457e761121ff7a9513.png';
+const smashImage = '';
 import { GamePage } from './shared/GamePage';
 
 const tips = [
@@ -6,7 +6,7 @@ const tips = [
   "Stage control and edge-guarding win matches",
   "DI (Directional Influence) can save you from early KOs",
   "Mix up your recovery options to avoid being predictable",
-  "Study matchups - know your character's strengths vs others"
+  "Study matchups — know your character's strengths vs others"
 ];
 
 export function SuperSmashBrosPage({ onBack }: { onBack: () => void }) {

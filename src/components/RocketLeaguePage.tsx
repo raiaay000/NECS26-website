@@ -1,4 +1,4 @@
-import rocketLeagueImage from 'figma:asset/a26a918307d87e9094af78a572bbb63e3b9ab4bf.png';
+import rocketLeagueImage from "../assets/a26a918307d87e9094af78a572bbb63e3b9ab4bf.png";
 import { GamePage } from './shared/GamePage';
 
 const tips = [

@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import imgNecs2026 from "figma:asset/78350b79fbc777704016bd37db4c592b405fe223.png";
-import imgScreenShot from "figma:asset/421fd19ac29de9957448ff9be4b6863cdbea78a4.png";
-import imgMlbb from "figma:asset/3a4a7af43a18d11045446ecac7b2aaf70d10c6cc.png";
-import imgConcert from "figma:asset/9c294c210ec7c239bb103cd80a9e32794ff549d8.png";
-import imgGamingMusic from "figma:asset/7d1bbe98923c4a56068f02447c3fff42b6028895.png";
+import imgNecs2026 from "../assets/78350b79fbc777704016bd37db4c592b405fe223.png";
+import imgScreenShot from "../assets/421fd19ac29de9957448ff9be4b6863cdbea78a4.png";
+import imgMlbb from "../assets/3a4a7af43a18d11045446ecac7b2aaf70d10c6cc.png";
+import imgConcert from "../assets/9c294c210ec7c239bb103cd80a9e32794ff549d8.png";
+import imgGamingMusic from "../assets/7d1bbe98923c4a56068f02447c3fff42b6028895.png";
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Section } from './shared/Section';
 import { CardSection } from './shared/CardSection';

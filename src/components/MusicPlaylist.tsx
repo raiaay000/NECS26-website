@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Play, Pause, SkipForward, SkipBack, Volume2 } from 'lucide-react';
-import musicImage from 'figma:asset/84a1c6e9734c44b861e34c9817e6a2d0b6ba1080.png';
+import musicImage from "../assets/84a1c6e9734c44b861e34c9817e6a2d0b6ba1080.png";
 
 interface Track {
   id: number;

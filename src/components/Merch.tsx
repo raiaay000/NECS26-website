@@ -1,6 +1,6 @@
-import imgValorantJersey from "figma:asset/124c30e85729d638d2a7c7113fe212b660997b97.png";
-import imgRocketLeagueJacket from "figma:asset/e1fbab3bbb71a3285e8ab43cd2032103f7696962.png";
-import imgSmashHoodie from "figma:asset/3e5816a0b4dae1872977e9f4cc1b2c26872e6982.png";
+import imgValorantJersey from "../assets/124c30e85729d638d2a7c7113fe212b660997b97.png";
+import imgRocketLeagueJacket from "../assets/e1fbab3bbb71a3285e8ab43cd2032103f7696962.png";
+import imgSmashHoodie from "../assets/3e5816a0b4dae1872977e9f4cc1b2c26872e6982.png";
 import { ShoppingCart } from 'lucide-react';
 import { useState } from 'react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
