@@ -18,6 +18,7 @@ export default defineConfig({
       'input-otp@1.4.2': 'input-otp',
 
       'figma:asset/a26a918307d87e9094af78a572bbb63e3b9ab4bf.png': path.resolve(__dirname, './src/assets/a26a918307d87e9094af78a572bbb63e3b9ab4bf.png'),
+      'figma:asset/0f2a9c23d65f901adf302b77729392316771b373.png': path.resolve(__dirname, './src/assets/0f2a9c23d65f901adf302b77729392316771b373.png'),
       'figma:asset/fa5beb57d13f69aa6cf097fdd2d9017e03b39a81.png': path.resolve(__dirname, './src/assets/fa5beb57d13f69aa6cf097fdd2d9017e03b39a81.png'),
       'figma:asset/f108e0c8ca28bb006b4331dc8cd5a4b7d40e25a4.png': path.resolve(__dirname, './src/assets/f108e0c8ca28bb006b4331dc8cd5a4b7d40e25a4.png'),
       'figma:asset/e9924b6cc2ad57afd43725356f783a6e5446b3b5.png': path.resolve(__dirname, './src/assets/e9924b6cc2ad57afd43725356f783a6e5446b3b5.png'),
