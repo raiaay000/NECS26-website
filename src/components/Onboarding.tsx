@@ -127,13 +127,13 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     handleComplete();
   };
 
-  const handleComplete = () => {
-    localStorage.setItem('necs2026_onboarding_completed', 'true');
-    setIsFadingOut(true);
-    setTimeout(() => {
-      onComplete();
-    }, 500);
-  };
+const handleComplete = () => {
+  setIsFadingOut(true);
+  setTimeout(() => {
+    onComplete();
+  }, 500);
+};
+
 
   // Keyboard navigation
   useEffect(() => {
