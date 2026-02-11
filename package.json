@@ -1,6 +1,7 @@
 {
       "name": "Enhance Event Management Features",
       "version": "0.1.0",
+      "homepage": "https://raiaay000.github.io/NECS26-website/",
       "private": true,
       "dependencies": {
             "@radix-ui/react-accordion": "^1.2.3",
@@ -54,7 +55,9 @@
 "scripts": {
   "dev": "vite",
   "build": "vite build",
+  "preview": "vite preview",
   "deploy": "gh-pages -d dist"
 }
+
 
 }
