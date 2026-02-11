@@ -1,4 +1,4 @@
-import smashImage from 'figma:asset/13106e410ec274380c5ed3457e761121ff7a9513.png';
+import smashImage from 'figma:asset/0f2a9c23d65f901adf302b77729392316771b373.png';
 import { GamePage } from './shared/GamePage';
 
 const tips = [
