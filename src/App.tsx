@@ -2,7 +2,24 @@ import React, { useState, useRef, useEffect, lazy, Suspense, useCallback, useMem
 import { ToastProvider } from './components/ui/toast';
 import { AuthModal } from './components/shared/AuthModal';
 import { UserMenu } from './components/shared/UserMenu';
-import { Home as HomeIcon, Users, Calendar, ShoppingBag, MapPin, Utensils, Music, Menu, X, ShoppingCart, Ticket, Trophy, Gamepad2, LogIn, Video, HelpCircle } from 'lucide-react';
+import {
+  Home as HomeIcon,
+  Users,
+  Calendar,
+  ShoppingBag,
+  MapPin,
+  Utensils,
+  Music,
+  Menu,
+  X,
+  ShoppingCart,
+  Ticket,
+  Trophy,
+  Gamepad2,
+  LogIn,
+  Video,
+  HelpCircle,
+} from 'lucide-react';
 
 // Lazy load all page components for code splitting
 const Home = lazy(() => import('./components/Home').then(m => ({ default: m.Home })));
@@ -25,9 +42,17 @@ const Checkout = lazy(() => import('./components/Checkout').then(m => ({ default
 const Profile = lazy(() => import('./components/Profile').then(m => ({ default: m.Profile })));
 const Reminders = lazy(() => import('./components/Reminders').then(m => ({ default: m.Reminders })));
 const Settings = lazy(() => import('./components/Settings').then(m => ({ default: m.Settings })));
-const Onboarding = lazy(() => import('./components/Onboarding').then(m => ({ default: m.Onboarding })));
 
-interface CartItem { id: string; name: string; price: number; quantity: number; type: 'ticket' | 'merch'; }
+// ✅ IMPORTANT: import Onboarding as DEFAULT to avoid “m.Onboarding undefined” issues
+const Onboarding = lazy(() => import('./components/Onboarding'));
+
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  type: 'ticket' | 'merch';
+}
 
 const navItems = [
   { id: 'home', label: 'Home', icon: HomeIcon },
@@ -45,9 +70,9 @@ const navItems = [
 ];
 
 const gameMap: Record<string, string> = {
-  'Valorant': 'valorant',
+  Valorant: 'valorant',
   'Rocket League': 'rocketleague',
-  'Super Smash Bros': 'supersmashbros'
+  'Super Smash Bros': 'supersmashbros',
 };
 
 function AppContent() {
@@ -66,44 +91,57 @@ function AppContent() {
   const mainRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const hasCompleted = localStorage.getItem('necs2026_onboarding_completed');
-    if (!hasCompleted) setShowOnboarding(true);
-    else setMainFadeIn(true);
+  // ✅ Always show onboarding on every fresh page load
+  // (so GitHub Pages / new devices / caching can’t "skip" it)
+  setShowOnboarding(true);
+  setMainFadeIn(false);
+}, []);
+
+
+  // ✅ Safety: never allow the whole app to remain invisible if onboarding import fails
+  useEffect(() => {
+    const t = setTimeout(() => setMainFadeIn(true), 800);
+    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }, [page, checkout]);
 
-  const nav = useCallback((id: string) => { 
-    setPage(id); 
-    setSidebarOpen(false); 
-    setCheckout(false); 
-    setCartOpen(false); 
-  }, []);
-  
-  const addToCart = useCallback((item: { id: string; name: string; price: number; type: 'ticket' | 'merch'; quantity: number }) => {
-    setCart(prevCart => {
-      const existing = prevCart.find(c => c.id === item.id);
-      return existing ? prevCart.map(c => c.id === item.id ? { ...c, quantity: c.quantity + item.quantity } : c) : [...prevCart, item];
-    });
+  const nav = useCallback((id: string) => {
+    setPage(id);
+    setSidebarOpen(false);
+    setCheckout(false);
+    setCartOpen(false);
   }, []);
 
+  const addToCart = useCallback(
+    (item: { id: string; name: string; price: number; type: 'ticket' | 'merch'; quantity: number }) => {
+      setCart(prevCart => {
+        const existing = prevCart.find(c => c.id === item.id);
+        return existing
+          ? prevCart.map(c => (c.id === item.id ? { ...c, quantity: c.quantity + item.quantity } : c))
+          : [...prevCart, item];
+      });
+    },
+    []
+  );
+
   const updateQty = useCallback((id: string, quantity: number) => {
-    setCart(prevCart => prevCart.map(i => i.id === id ? { ...i, quantity } : i));
+    setCart(prevCart => prevCart.map(i => (i.id === id ? { ...i, quantity } : i)));
   }, []);
-  
+
   const removeItem = useCallback((id: string) => {
     setCart(prevCart => prevCart.filter(i => i.id !== id));
   }, []);
-  
+
   const clearCart = useCallback(() => setCart([]), []);
-  
-  const handleCheckout = useCallback(() => { 
-    setCheckout(true); 
-    setCartOpen(false); 
+
+  const handleCheckout = useCallback(() => {
+    setCheckout(true);
+    setCartOpen(false);
   }, []);
-  
+
   const cartCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
 
   const handleLogin = useCallback((email: string) => {
@@ -131,42 +169,61 @@ function AppContent() {
     setLoginOpen(false);
   }, []);
 
-  const pages = useMemo(() => ({
-    home: <Home onNavigate={nav} />,
-    games: <Games onGameSelect={(game) => nav(gameMap[game])} />,
-    teams: <Teams />,
-    schedule: <Schedule />,
-    tickets: <Tickets onAddToCart={addToCart} />,
-    merch: <Merch onAddToCart={addToCart} />,
-    venue: <Venue />,
-    food: <FoodMenu />,
-    music: <MusicPlaylist />,
-    brackets: <Brackets />,
-    valorant: <ValorantPage onBack={() => nav('games')} />,
-    rocketleague: <RocketLeaguePage onBack={() => nav('games')} />,
-    supersmashbros: <SuperSmashBrosPage onBack={() => nav('games')} />,
-    profile: <Profile userName={userName} isGuest={isGuest} />,
-    reminders: <Reminders isGuest={isGuest} />,
-    settings: <Settings isGuest={isGuest} />,
-    watch: <Watch />,
-    help: <Help />
-  }), [nav, addToCart, userName, isGuest]);
+  const pages = useMemo(
+    () => ({
+      home: <Home onNavigate={nav} />,
+      games: <Games onGameSelect={game => nav(gameMap[game])} />,
+      teams: <Teams />,
+      schedule: <Schedule />,
+      tickets: <Tickets onAddToCart={addToCart} />,
+      merch: <Merch onAddToCart={addToCart} />,
+      venue: <Venue />,
+      food: <FoodMenu />,
+      music: <MusicPlaylist />,
+      brackets: <Brackets />,
+      valorant: <ValorantPage onBack={() => nav('games')} />,
+      rocketleague: <RocketLeaguePage onBack={() => nav('games')} />,
+      supersmashbros: <SuperSmashBrosPage onBack={() => nav('games')} />,
+      profile: <Profile userName={userName} isGuest={isGuest} />,
+      reminders: <Reminders isGuest={isGuest} />,
+      settings: <Settings isGuest={isGuest} />,
+      watch: <Watch />,
+      help: <Help />,
+    }),
+    [nav, addToCart, userName, isGuest]
+  );
 
   return (
     <div className="flex h-screen bg-black text-white">
       {showOnboarding && (
-        <Suspense fallback={null}>
-          <Onboarding onComplete={() => { setShowOnboarding(false); setTimeout(() => setMainFadeIn(true), 100); }} />
+        <Suspense
+          fallback={
+            <div className="fixed inset-0 z-[999] bg-black flex items-center justify-center">
+              <div className="text-[#2f6bff] text-xl font-semibold">Loading onboarding…</div>
+            </div>
+          }
+        >
+          <Onboarding
+            onComplete={() => {
+              // ✅ Ensure the key is actually set so onboarding doesn’t re-appear
+              localStorage.setItem('necs2026_onboarding_completed', 'true');
+              setShowOnboarding(false);
+              setTimeout(() => setMainFadeIn(true), 100);
+            }}
+          />
         </Suspense>
       )}
-      
+
       <div className={`contents transition-opacity duration-700 ${mainFadeIn ? 'opacity-100' : 'opacity-0'}`}>
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="fixed top-4 left-4 z-50 w-12 h-12 bg-[#0a0a0a]/80 backdrop-blur-md border border-[#1a1a1a]/50 rounded-lg flex items-center justify-center hover:bg-[#1a1a1a]/80 transition-colors">
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="fixed top-4 left-4 z-50 w-12 h-12 bg-[#0a0a0a]/80 backdrop-blur-md border border-[#1a1a1a]/50 rounded-lg flex items-center justify-center hover:bg-[#1a1a1a]/80 transition-colors"
+        >
           {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
 
         {isLoggedIn || isGuest ? (
-          <UserMenu 
+          <UserMenu
             userName={userName}
             isGuest={isGuest}
             isOpen={userMenuOpen}
@@ -175,7 +232,10 @@ function AppContent() {
             onLogout={handleLogout}
           />
         ) : (
-          <button onClick={() => setLoginOpen(true)} className="fixed top-4 right-4 z-50 h-12 px-6 bg-[#2f6bff] hover:bg-[#2557d6] rounded-lg flex items-center gap-2 transition-all font-semibold">
+          <button
+            onClick={() => setLoginOpen(true)}
+            className="fixed top-4 right-4 z-50 h-12 px-6 bg-[#2f6bff] hover:bg-[#2557d6] rounded-lg flex items-center gap-2 transition-all font-semibold"
+          >
             <LogIn className="w-5 h-5" />
             <span>Login</span>
           </button>
@@ -184,22 +244,50 @@ function AppContent() {
         {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30" onClick={() => setSidebarOpen(false)} />}
         {cartOpen && <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setCartOpen(false)} />}
 
-        {loginOpen && <AuthModal onLogin={handleLogin} onSignup={handleSignup} onGuest={handleGuest} onClose={() => setLoginOpen(false)} />}
+        {loginOpen && (
+          <AuthModal
+            onLogin={handleLogin}
+            onSignup={handleSignup}
+            onGuest={handleGuest}
+            onClose={() => setLoginOpen(false)}
+          />
+        )}
 
-        <div className={`fixed top-0 right-0 h-full w-full md:w-[450px] bg-[#0a0a0a] border-l border-[#1a1a1a] z-50 transition-transform duration-300 ${cartOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-          <Cart cart={cart} onUpdateQuantity={updateQty} onRemoveItem={removeItem} onCheckout={handleCheckout} onClose={() => setCartOpen(false)} />
+        <div
+          className={`fixed top-0 right-0 h-full w-full md:w-[450px] bg-[#0a0a0a] border-l border-[#1a1a1a] z-50 transition-transform duration-300 ${
+            cartOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        >
+          <Cart
+            cart={cart}
+            onUpdateQuantity={updateQty}
+            onRemoveItem={removeItem}
+            onCheckout={handleCheckout}
+            onClose={() => setCartOpen(false)}
+          />
         </div>
 
-        <aside className={`fixed h-full bg-[#0a0a0a] border-r border-[#1a1a1a] flex flex-col py-8 gap-2 z-40 transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} w-64`}>
+        <aside
+          className={`fixed h-full bg-[#0a0a0a] border-r border-[#1a1a1a] flex flex-col py-8 gap-2 z-40 transition-transform duration-300 ${
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          } w-64`}
+        >
           <div className="mb-8 px-4 flex items-center justify-center">
             <div className="text-[#2f6bff] font-bold text-xl text-center">NECS 2026</div>
           </div>
-          
+
           <div className="flex-1 overflow-y-auto">
             {navItems.map(item => {
               const Icon = item.icon;
               return (
-                <button key={item.id} onClick={() => nav(item.id)} className={`mx-4 h-12 rounded-lg flex items-center gap-3 px-4 transition-all mb-2 ${page === item.id ? 'bg-[#2f6bff] text-white' : 'text-gray-500 hover:text-white hover:bg-[#1a1a1a]'}`} title={item.label}>
+                <button
+                  key={item.id}
+                  onClick={() => nav(item.id)}
+                  className={`mx-4 h-12 rounded-lg flex items-center gap-3 px-4 transition-all mb-2 ${
+                    page === item.id ? 'bg-[#2f6bff] text-white' : 'text-gray-500 hover:text-white hover:bg-[#1a1a1a]'
+                  }`}
+                  title={item.label}
+                >
                   <Icon className="w-5 h-5 flex-shrink-0" />
                   <span>{item.label}</span>
                 </button>
@@ -208,7 +296,10 @@ function AppContent() {
           </div>
 
           <div className="mt-auto pt-4 border-t border-[#1a1a1a] px-4">
-            <button onClick={() => setCartOpen(true)} className="w-full h-12 rounded-lg flex items-center gap-3 px-4 bg-[#1a1a1a] hover:bg-[#2f6bff] text-white transition-all relative">
+            <button
+              onClick={() => setCartOpen(true)}
+              className="w-full h-12 rounded-lg flex items-center gap-3 px-4 bg-[#1a1a1a] hover:bg-[#2f6bff] text-white transition-all relative"
+            >
               <ShoppingCart className="w-5 h-5 flex-shrink-0" />
               <span>Cart</span>
               {cartCount > 0 && (
@@ -221,12 +312,18 @@ function AppContent() {
         </aside>
 
         <main className="flex-1 overflow-y-auto" ref={mainRef}>
-          <Suspense fallback={
-            <div className="flex items-center justify-center h-screen">
-              <div className="text-[#2f6bff] text-xl">Loading...</div>
-            </div>
-          }>
-            {checkout ? <Checkout cart={cart} onBack={() => setCheckout(false)} onClearCart={clearCart} /> : pages[page] || pages.home}
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center h-screen">
+                <div className="text-[#2f6bff] text-xl">Loading...</div>
+              </div>
+            }
+          >
+            {checkout ? (
+              <Checkout cart={cart} onBack={() => setCheckout(false)} onClearCart={clearCart} />
+            ) : (
+              pages[page] || pages.home
+            )}
           </Suspense>
         </main>
       </div>
