@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import imgBridgestone from "figma:asset/51dff6bdfa60cc281ef0bbb9670becee2c8ea42f.png";
 
 import { MapPin, Utensils, Coffee, Hotel, Info, Zap, DoorOpen, ExternalLink, Trophy, Users, Gamepad2, Maximize2, X, Wifi, ShoppingBag, Camera, Bath, Accessibility, Layers, Car, Search, Beer, Martini, Music, Building } from 'lucide-react';
@@ -25,7 +25,7 @@ interface VenueFeature {
   name: string;
   section: string;
   description: string;
-  icon: any;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   color: string;
   position: { x: number; y: number };
 }
@@ -104,16 +104,18 @@ const venueFeatures: VenueFeature[] = [
     position: { x: 250, y: 530 }
   },
   {
-    id: 3,
+    id: 'merch-main',
     name: 'Main Merch Stand',
+    section: 'North Concourse',
     description: 'Primary official tournament merchandise location featuring team jerseys, NECS 2026 branded apparel, gaming peripherals, posters, collectibles, and exclusive limited-edition items.',
     icon: ShoppingBag,
     color: '#fb923c',
     position: { x: 400, y: 480 }
   },
   {
-    id: 9,
+    id: 'merch-north',
     name: 'North Concourse Merch',
+    section: 'North Concourse',
     description: 'Additional merchandise stand with popular items, quick checkout, and express service for fans wanting to grab gear without missing the action.',
     icon: ShoppingBag,
     color: '#fb923c',
@@ -225,12 +227,25 @@ export function Venue() {
   const [hoveredFeature, setHoveredFeature] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<'map' | '3d' | 'parking' | 'nearby' | 'food'>('map');
- 
   const [fullscreenMap, setFullscreenMap] = useState(false);
   const headerRef = useScrollAnimation();
   const arenaRef = useScrollAnimation();
   const mapRef = useScrollAnimation();
   const nearbyRef = useScrollAnimation();
+
+  const safeVenueFeatures = useMemo(
+    () => venueFeatures.filter(feature => feature.icon && feature.position),
+    []
+  );
+
+  const nearbyGroups = useMemo(() => {
+    return {
+      restaurants: nearbyLocations.filter(p => p.type === 'restaurant'),
+      hotels: nearbyLocations.filter(p => p.type === 'hotel'),
+      attractions: nearbyLocations.filter(p => p.type === 'attraction'),
+      musicNightlife: nearbyLocations.filter(p => p.type === 'music' || p.type === 'nightlife'),
+    };
+  }, []);
 
   const MapContent = ({ isFullscreen = false }: { isFullscreen?: boolean }) => (
     <div className={`relative bg-gradient-to-br from-[#0a0a0a] to-[#1a1a1a] rounded-lg overflow-hidden border border-[#2a2a2a] ${isFullscreen ? 'h-full' : ''}`}>
@@ -283,7 +298,7 @@ export function Venue() {
         </svg>
         
         {/* Interactive Markers */}
-        {venueFeatures.map(feature => {
+        {safeVenueFeatures.map(feature => {
           const FeatureIcon = feature.icon;
           const isHovered = hoveredFeature === feature.id;
           const isSelected = selectedFeature?.id === feature.id;
@@ -325,13 +340,13 @@ export function Venue() {
               {isHovered && !selectedFeature && (
                 <div 
                   className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 bg-[#0a0a0a] border-2 px-4 py-2 rounded-lg whitespace-nowrap text-sm font-semibold shadow-xl z-30 min-w-max"
-                  style={{ borderColor: feature.color }}
-                >
-                  <div className="text-white">{feature.name}</div>
-                  <div className="text-xs text-gray-400 mt-0.5">{feature.section}</div>
-                </div>
-              )}
-            </div>
+                style={{ borderColor: feature.color }}
+              >
+                <div className="text-white">{feature.name}</div>
+                 <div className="text-xs text-gray-400 mt-0.5">{feature.section ?? 'General Access'}</div>
+              </div>
+            )}
+          </div>
           );
         })}
       </div>
@@ -353,7 +368,9 @@ export function Venue() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-2xl font-bold break-words">{selectedFeature.name}</h3>
-                  <p className="text-sm font-medium break-words" style={{ color: selectedFeature.color }}>{selectedFeature.section}</p>
+                  <p className="text-sm font-medium break-words" style={{ color: selectedFeature.color }}>
+                    {selectedFeature.section ?? 'Feature Zone'}
+                  </p>
                 </div>
               </div>
               <button
@@ -572,8 +589,8 @@ export function Venue() {
                     <Utensils className="w-5 h-5 text-green-500" />
                     Nearby Restaurants
                   </h3>
-                  <div className="space-y-3">
-                    {nearbyLocations.filter(p => p.type === 'restaurant').map(point => (
+                    <div className="space-y-3">
+                      {nearbyGroups.restaurants.map(point => (
                       <div key={point.id} className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg p-4 hover:border-green-500 transition-colors cursor-pointer">
                         <h4 className="font-semibold mb-1">{point.name}</h4>
                         <p className="text-sm text-gray-400">{point.description}</p>
@@ -590,8 +607,8 @@ export function Venue() {
                     <Hotel className="w-5 h-5 text-purple-500" />
                     Nearby Hotels
                   </h3>
-                  <div className="space-y-3">
-                    {nearbyLocations.filter(p => p.type === 'hotel').map(point => (
+                    <div className="space-y-3">
+                      {nearbyGroups.hotels.map(point => (
                       <div key={point.id} className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg p-4 hover:border-purple-500 transition-colors cursor-pointer">
                         <h4 className="font-semibold mb-1">{point.name}</h4>
                         <p className="text-sm text-gray-400">{point.description}</p>
@@ -627,7 +644,7 @@ export function Venue() {
                   Restaurants
                 </h3>
                 <div className="space-y-3">
-                  {nearbyLocations.filter(p => p.type === 'restaurant').map(point => (
+                  {nearbyGroups.restaurants.map(point => (
                     <div key={point.id} className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg p-4 hover:border-[#10b981] transition-colors cursor-pointer">
                       <h4 className="font-semibold mb-1">{point.name}</h4>
                       <p className="text-sm text-gray-400 mb-2">{point.description}</p>
@@ -648,7 +665,7 @@ export function Venue() {
                   Attractions
                 </h3>
                 <div className="space-y-3">
-                  {nearbyLocations.filter(p => p.type === 'attraction').map(point => (
+                  {nearbyGroups.attractions.map(point => (
                     <div key={point.id} className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg p-4 hover:border-[#fb923c] transition-colors cursor-pointer">
                       <h4 className="font-semibold mb-1">{point.name}</h4>
                       <p className="text-sm text-gray-400 mb-2">{point.description}</p>
@@ -669,7 +686,7 @@ export function Venue() {
                   Music & Nightlife
                 </h3>
                 <div className="space-y-3">
-                  {nearbyLocations.filter(p => p.type === 'music' || p.type === 'nightlife').map(point => (
+                  {nearbyGroups.musicNightlife.map(point => (
                     <div key={point.id} className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg p-4 hover:border-[#8b5cf6] transition-colors cursor-pointer">
                       <h4 className="font-semibold mb-1">{point.name}</h4>
                       <p className="text-sm text-gray-400 mb-2">{point.description}</p>
@@ -690,7 +707,7 @@ export function Venue() {
                   Hotels
                 </h3>
                 <div className="space-y-3">
-                  {nearbyLocations.filter(p => p.type === 'hotel').map(point => (
+                  {nearbyGroups.hotels.map(point => (
                     <div key={point.id} className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg p-4 hover:border-[#ec4899] transition-colors cursor-pointer">
                       <h4 className="font-semibold mb-1">{point.name}</h4>
                       <p className="text-sm text-gray-400 mb-2">{point.description}</p>

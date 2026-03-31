@@ -2,22 +2,22 @@ import { Download as DownloadIcon, Smartphone, Monitor, Tablet, Play, Star, User
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import { motion } from 'motion/react';
 
+const featuresData = [
+  { icon: Smartphone, title: 'Mobile Ready', desc: 'Full experience on iOS and Android' },
+  { icon: Monitor, title: 'Desktop App', desc: 'Optimized for Windows, Mac, and Linux' },
+  { icon: Tablet, title: 'Tablet Support', desc: 'Perfect viewing on any screen size' },
+];
+
+const statsData = [
+  { icon: Star, value: '4.9', label: 'App Rating' },
+  { icon: Users, value: '500K+', label: 'Downloads' },
+  { icon: TrendingUp, value: '99%', label: 'Satisfaction' },
+];
+
 export function Download() {
   const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation();
   const { ref: featuresRef, isVisible: featuresVisible } = useScrollAnimation();
   const { ref: statsRef, isVisible: statsVisible } = useScrollAnimation();
-
-  const features = [
-    { icon: Smartphone, title: 'Mobile Ready', desc: 'Full experience on iOS and Android' },
-    { icon: Monitor, title: 'Desktop App', desc: 'Optimized for Windows, Mac, and Linux' },
-    { icon: Tablet, title: 'Tablet Support', desc: 'Perfect viewing on any screen size' },
-  ];
-
-  const stats = [
-    { icon: Star, value: '4.9', label: 'App Rating' },
-    { icon: Users, value: '500K+', label: 'Downloads' },
-    { icon: TrendingUp, value: '99%', label: 'Satisfaction' },
-  ];
 
   return (
     <div className="min-h-screen pt-20 px-8 pb-8 bg-black text-white">
@@ -60,7 +60,7 @@ export function Download() {
 
         {/* Platform Features */}
         <div ref={featuresRef} className={`grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 transition-all duration-700 ${featuresVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          {features.map((feature, idx) => {
+          {featuresData.map((feature, idx) => {
             const Icon = feature.icon;
             return (
               <motion.div
@@ -73,8 +73,8 @@ export function Download() {
                 <div className="w-16 h-16 bg-[#2f6bff]/20 rounded-xl flex items-center justify-center mb-4 group-hover:bg-[#2f6bff]/30 transition-all">
                   <Icon className="w-8 h-8 text-[#2f6bff]" />
                 </div>
-                <h3 className="text-2xl font-bold mb-2">{feature.title}</h3>
-                <p className="text-gray-400">{feature.desc}</p>
+                  <h3 className="text-2xl font-bold mb-2">{feature.title}</h3>
+                  <p className="text-gray-400">{feature.desc}</p>
               </motion.div>
             );
           })}
@@ -82,7 +82,7 @@ export function Download() {
 
         {/* Stats */}
         <div ref={statsRef} className={`grid grid-cols-1 md:grid-cols-3 gap-6 transition-all duration-700 ${statsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          {stats.map((stat, idx) => {
+          {statsData.map((stat, idx) => {
             const Icon = stat.icon;
             return (
               <motion.div
