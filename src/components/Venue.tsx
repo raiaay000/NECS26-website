@@ -1,19 +1,30 @@
 import { useState } from 'react';
 import imgBridgestone from "figma:asset/51dff6bdfa60cc281ef0bbb9670becee2c8ea42f.png";
+<<<<<<< HEAD
 import { MapPin, Utensils, Coffee, Hotel, Info, Zap, DoorOpen, ExternalLink, Trophy, Users, Gamepad2, Maximize2, X, Wifi, ShoppingBag, Camera, Bath, Accessibility, Layers, Car, Search, Beer, Martini, Music, Building } from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import { Arena3D } from './Arena3D';
 import { ParkingOnly } from './ParkingOnly';
 import { OnBar } from './OnBar';
 import { VenueFoodDrinks } from './VenueFoodDrinks';
+=======
+import { MapPin, Utensils, Coffee, Hotel, Info, Zap, DoorOpen, ExternalLink, Trophy, Users, Gamepad2, Maximize2, X, Wifi, ShoppingBag, Camera, Bath, Accessibility } from 'lucide-react';
+import { useScrollAnimation } from '../hooks/useScrollAnimation';
+>>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
 
 interface NearbyLocation {
   id: number;
   name: string;
+<<<<<<< HEAD
   type: 'restaurant' | 'hotel' | 'attraction' | 'music' | 'nightlife';
   description: string;
   address: string;
   distance?: string;
+=======
+  type: 'restaurant' | 'hotel';
+  description: string;
+  address: string;
+>>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
 }
 
 interface VenueFeature {
@@ -27,6 +38,7 @@ interface VenueFeature {
 }
 
 const nearbyLocations: NearbyLocation[] = [
+<<<<<<< HEAD
   // Restaurants
   { id: 1, name: 'The Stillery', type: 'restaurant', description: 'Upscale dining with craft cocktails', address: '223 Rep. John Lewis Way S', distance: '0.2 mi' },
   { id: 2, name: 'Tootsies Orchid Lounge', type: 'restaurant', description: 'Iconic Nashville honky-tonk and grill', address: '422 Broadway', distance: '0.1 mi' },
@@ -48,6 +60,13 @@ const nearbyLocations: NearbyLocation[] = [
   // Nightlife
   { id: 11, name: 'Honky Tonk Central', type: 'nightlife', description: 'Three floors of live music', address: '329 Broadway', distance: '0.2 mi' },
   { id: 12, name: 'The Stage on Broadway', type: 'nightlife', description: 'Premier Broadway entertainment venue', address: '412 Broadway', distance: '0.1 mi' },
+=======
+  { id: 1, name: "The Stillery", type: "restaurant", description: "Upscale dining with craft cocktails", address: "223 Rep. John Lewis Way S" },
+  { id: 2, name: "Tootsies Orchid Lounge", type: "restaurant", description: "Iconic Nashville honky-tonk and grill", address: "422 Broadway" },
+  { id: 3, name: "Hattie B's Hot Chicken", type: "restaurant", description: "Famous Nashville hot chicken", address: "112 19th Ave S" },
+  { id: 4, name: "Omni Nashville Hotel", type: "hotel", description: "Luxury accommodations next to the arena", address: "250 Rep. John Lewis Way S" },
+  { id: 5, name: "The Hermitage Hotel", type: "hotel", description: "Historic luxury hotel in downtown", address: "231 6th Ave N" },
+>>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
 ];
 
 // Extremely accurate Bridgestone Arena layout - positions based on actual venue geography
@@ -217,7 +236,10 @@ const venueFeatures: VenueFeature[] = [
 export function Venue() {
   const [selectedFeature, setSelectedFeature] = useState<VenueFeature | null>(null);
   const [hoveredFeature, setHoveredFeature] = useState<string | null>(null);
+<<<<<<< HEAD
   const [activeTab, setActiveTab] = useState<'map' | '3d' | 'parking' | 'nearby' | 'food'>('map');
+=======
+>>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
   const [fullscreenMap, setFullscreenMap] = useState(false);
   const headerRef = useScrollAnimation();
   const arenaRef = useScrollAnimation();
@@ -264,12 +286,33 @@ export function Venue() {
           <text x="235" y="250" textAnchor="middle" fill="#4a5568" fontSize="10" fontWeight="600">102-104</text>
           
           {/* Broadway Entrance - South Side */}
+<<<<<<< HEAD
           
           {/* Concourse Ring Indicators - REMOVED random circles */}
           
           {/* VIP Club Level - West Side - REMOVED to prevent overlap */}
           
           {/* Backstage Area - North - REMOVED to prevent overlap */}
+=======
+          <rect x="350" y="595" width="100" height="35" rx="6" fill="#14b8a6" opacity="0.2" stroke="#14b8a6" strokeWidth="2" />
+          <text x="400" y="617" textAnchor="middle" fill="#14b8a6" fontSize="13" fontWeight="bold">BROADWAY</text>
+          <text x="400" y="631" textAnchor="middle" fill="#14b8a6" fontSize="10" fontWeight="bold">ENTRANCE</text>
+          
+          {/* Concourse Ring Indicators */}
+          <circle cx="200" cy="170" r="18" fill="none" stroke="#fb923c" strokeWidth="1.5" opacity="0.4" />
+          <circle cx="600" cy="170" r="18" fill="none" stroke="#f59e0b" strokeWidth="1.5" opacity="0.4" />
+          <circle cx="600" cy="480" r="18" fill="none" stroke="#fb923c" strokeWidth="1.5" opacity="0.4" />
+          <circle cx="120" cy="325" r="18" fill="none" stroke="#fb923c" strokeWidth="1.5" opacity="0.4" />
+          <circle cx="680" cy="325" r="18" fill="none" stroke="#fb923c" strokeWidth="1.5" opacity="0.4" />
+          
+          {/* VIP Club Level - West Side */}
+          <rect x="50" y="180" width="100" height="40" rx="5" fill="#ec4899" opacity="0.15" stroke="#ec4899" strokeWidth="1.5" />
+          <text x="100" y="205" textAnchor="middle" fill="#ec4899" fontSize="10" fontWeight="600">LEXUS LOUNGE</text>
+          
+          {/* Backstage Area - North */}
+          <rect x="340" y="90" width="120" height="35" rx="5" fill="#8b5cf6" opacity="0.15" stroke="#8b5cf6" strokeWidth="1.5" />
+          <text x="400" y="112" textAnchor="middle" fill="#8b5cf6" fontSize="10" fontWeight="600">PLAYER AREA</text>
+>>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
         </svg>
         
         {/* Interactive Markers */}
@@ -437,6 +480,7 @@ export function Venue() {
         <div ref={headerRef.ref} className={`transition-all duration-700 ${headerRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <h1 className="text-5xl font-bold mb-4">Bridgestone Arena</h1>
           <p className="text-gray-400 mb-8">Interactive Venue Map & Event Information</p>
+<<<<<<< HEAD
           
           {/* Tabs Navigation */}
           <div className="flex gap-2 border-b border-[#1a1a1a] mb-8 overflow-x-auto">
@@ -697,6 +741,102 @@ export function Venue() {
         )}
         
         {activeTab === 'food' && <VenueFoodDrinks />}
+=======
+        </div>
+
+        {/* Arena Info */}
+        <div ref={arenaRef.ref} className={`grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 transition-all duration-700 ${arenaRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          <div>
+            <img src={imgBridgestone} alt="Bridgestone Arena Exterior" className="w-full h-64 object-cover rounded-lg" />
+          </div>
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-xl font-bold mb-2">Location</h3>
+              <p className="text-gray-400">501 Broadway, Nashville, TN 37203</p>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold mb-2">Event Dates</h3>
+              <p className="text-gray-400">May 6-10, 2026</p>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold mb-2">Arena Capacity</h3>
+              <p className="text-gray-400">17,159 seats (Lower Bowl: 101-119, Club: 201-228, Upper: 301-333)</p>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold mb-2">Parking & Transit</h3>
+              <p className="text-gray-400">Parking at Nissan Stadium Lot ($15) and nearby garages. WeGo Music City Circuit routes 3, 4, 5, 18, 55</p>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                <Accessibility className="w-5 h-5 text-green-500" />
+                Accessibility
+              </h3>
+              <p className="text-gray-400">Fully ADA compliant venue with accessible seating on all levels, elevators, ramps, and dedicated accessibility services.</p>
+            </div>
+            <div className="pt-4">
+              <a 
+                href="https://www.bridgestonearena.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-[#2f6bff] text-white px-6 py-3 rounded-lg font-bold hover:bg-[#2557d6] transition-colors"
+              >
+                Official Arena Website <ExternalLink className="w-5 h-5" />
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Interactive Arena Map */}
+        <div ref={mapRef.ref} className={`mb-12 transition-all duration-700 ${mapRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          <div className="mb-6">
+            <h2 className="text-3xl font-bold mb-2">Interactive Arena Map</h2>
+            <p className="text-gray-400">Explore Bridgestone Arena's accurate layout - Click markers for detailed location information</p>
+          </div>
+          <MapContent />
+        </div>
+
+        {/* Nearby Locations */}
+        <div ref={nearbyRef.ref} className={`mt-12 transition-all duration-700 ${nearbyRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+          <h2 className="text-3xl font-bold mb-6">Nearby Nashville Locations</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <Utensils className="w-5 h-5 text-green-500" />
+                Nearby Restaurants
+              </h3>
+              <div className="space-y-3">
+                {nearbyLocations.filter(p => p.type === 'restaurant').map(point => (
+                  <div key={point.id} className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg p-4 hover:border-green-500 transition-colors cursor-pointer">
+                    <h4 className="font-semibold mb-1">{point.name}</h4>
+                    <p className="text-sm text-gray-400">{point.description}</p>
+                    {point.address && <p className="text-xs text-green-500 mt-1 flex items-center gap-1">
+                      <MapPin className="w-3 h-3" /> {point.address}
+                    </p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <Hotel className="w-5 h-5 text-purple-500" />
+                Nearby Hotels
+              </h3>
+              <div className="space-y-3">
+                {nearbyLocations.filter(p => p.type === 'hotel').map(point => (
+                  <div key={point.id} className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg p-4 hover:border-purple-500 transition-colors cursor-pointer">
+                    <h4 className="font-semibold mb-1">{point.name}</h4>
+                    <p className="text-sm text-gray-400">{point.description}</p>
+                    {point.address && <p className="text-xs text-purple-500 mt-1 flex items-center gap-1">
+                      <MapPin className="w-3 h-3" /> {point.address}
+                    </p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+>>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
       </div>
     </div>
   );

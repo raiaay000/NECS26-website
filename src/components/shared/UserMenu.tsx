@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { User, ChevronDown, Bell, Settings, LogOut, Receipt, Users, MoreHorizontal } from 'lucide-react';
+=======
+import { User, ChevronDown, Bell, Settings, LogOut } from 'lucide-react';
+>>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
 
 interface UserMenuProps {
   userName: string;
@@ -13,6 +17,7 @@ export function UserMenu({ userName, isGuest, isOpen, onToggle, onNavigate, onLo
   const menuItems = [
     { icon: User, label: 'Profile', page: 'profile' },
     { icon: Bell, label: 'Reminders', page: 'reminders' },
+<<<<<<< HEAD
     { icon: Receipt, label: 'Receipts', page: 'receipts' },
     { icon: Users, label: 'Parties', page: 'parties', badge: 'New' },
     { icon: Settings, label: 'Settings', page: 'settings' },
@@ -21,6 +26,13 @@ export function UserMenu({ userName, isGuest, isOpen, onToggle, onNavigate, onLo
 
   return (
     <div className="fixed top-4 right-[36px] z-50">
+=======
+    { icon: Settings, label: 'Settings', page: 'settings', border: true }
+  ];
+
+  return (
+    <div className="fixed top-4 right-4 z-50">
+>>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
       <button onClick={onToggle} className="h-12 px-4 bg-[#0a0a0a]/80 backdrop-blur-md border border-[#1a1a1a]/50 rounded-lg flex items-center gap-2 hover:bg-[#1a1a1a]/80 transition-colors">
         <User className="w-5 h-5" />
         <span className="text-sm">{userName}</span>
@@ -43,7 +55,11 @@ export function UserMenu({ userName, isGuest, isOpen, onToggle, onNavigate, onLo
               </div>
             </div>
 
+<<<<<<< HEAD
             {menuItems.map(item => (
+=======
+            {!isGuest && menuItems.map(item => (
+>>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
               <button
                 key={item.page}
                 onClick={() => { onToggle(); onNavigate(item.page); }}
@@ -51,7 +67,10 @@ export function UserMenu({ userName, isGuest, isOpen, onToggle, onNavigate, onLo
               >
                 <item.icon className="w-4 h-4" />
                 <span>{item.label}</span>
+<<<<<<< HEAD
                 {item.badge && <span className="ml-auto px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full">{item.badge}</span>}
+=======
+>>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
               </button>
             ))}
 
@@ -64,4 +83,8 @@ export function UserMenu({ userName, isGuest, isOpen, onToggle, onNavigate, onLo
       )}
     </div>
   );
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e

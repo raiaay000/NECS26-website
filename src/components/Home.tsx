@@ -87,7 +87,11 @@ export function Home({ onNavigate }: { onNavigate?: (page: string) => void }) {
           <h1 className="text-6xl font-bold mx-[0px] -mt-8">
             In the Heart of <span className="text-[#fb923c]">Music City</span>
             <br />
+<<<<<<< HEAD
             The Ultimate <span className="text-[#2f6bff]">Championship</span>
+=======
+            The Ultimate <span className="text-[#2f6bff] animate-[glow_2s_ease-in-out_infinite]">Championship</span>
+>>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
           </h1>
           <div className="flex items-center justify-center gap-6 my-8">
             {[
@@ -98,7 +102,11 @@ export function Home({ onNavigate }: { onNavigate?: (page: string) => void }) {
             ].map((item, index, arr) => (
               <div key={item.label} className="flex items-center gap-6">
                 <div className="text-center transform transition-all hover:scale-110">
+<<<<<<< HEAD
                   <div className="text-5xl font-bold mb-2 text-white">
+=======
+                  <div className="text-5xl font-bold mb-2 bg-gradient-to-br from-white to-gray-300 bg-clip-text text-transparent">
+>>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
                     {String(item.value).padStart(item.width, '0')}
                   </div>
                   <div className="text-sm text-gray-400 uppercase tracking-wider">{item.label}</div>
@@ -108,7 +116,11 @@ export function Home({ onNavigate }: { onNavigate?: (page: string) => void }) {
             ))}
           </div>
           <p className="text-xl text-gray-400 mb-8">May 6-10, 2026 at Bridgestone Arena, Nashville</p>
+<<<<<<< HEAD
           <button className="bg-[#2f6bff] px-8 py-4 rounded-lg font-bold text-lg hover:bg-[#2557d6] transition-all transform hover:scale-105">
+=======
+          <button className="bg-gradient-to-r from-[#2f6bff] to-[#1d4ed8] px-8 py-4 rounded-lg font-bold text-lg hover:from-[#2557d6] hover:to-[#1e40af] transition-all transform hover:scale-105 hover:shadow-[0_0_30px_rgba(251,191,36,0.4)]">
+>>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
             GET TICKETS
           </button>
         </div>

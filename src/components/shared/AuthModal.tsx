@@ -1,7 +1,10 @@
 import { X, LogIn, User } from 'lucide-react';
 import { useState } from 'react';
+<<<<<<< HEAD
 import { loginWithEmail, signupWithEmail } from '../../utils/firebase';
 import { useToast } from '../ui/toast';
+=======
+>>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
 
 interface AuthModalProps {
   onLogin: (email: string, password: string) => void;
@@ -12,6 +15,7 @@ interface AuthModalProps {
 
 export function AuthModal({ onLogin, onSignup, onGuest, onClose }: AuthModalProps) {
   const [showSignup, setShowSignup] = useState(false);
+<<<<<<< HEAD
   const [loading, setLoading] = useState(false);
   const toast = useToast();
 
@@ -50,6 +54,23 @@ export function AuthModal({ onLogin, onSignup, onGuest, onClose }: AuthModalProp
       toast.error('An error occurred. Please try again.');
     } finally {
       setLoading(false);
+=======
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    if (showSignup) {
+      onSignup(
+        formData.get('email') as string,
+        formData.get('password') as string,
+        formData.get('name') as string
+      );
+    } else {
+      onLogin(
+        formData.get('email') as string,
+        formData.get('password') as string
+      );
+>>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
     }
   };
 
@@ -113,4 +134,8 @@ export function AuthModal({ onLogin, onSignup, onGuest, onClose }: AuthModalProp
       </div>
     </>
   );
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
