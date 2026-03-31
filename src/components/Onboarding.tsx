@@ -127,7 +127,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     handleComplete();
   };
 
-<<<<<<< HEAD
+
   const handleComplete = () => {
     localStorage.setItem('necs2026_onboarding_completed', 'true');
     setIsFadingOut(true);
@@ -135,15 +135,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       onComplete();
     }, 500);
   };
-=======
-const handleComplete = () => {
-  setIsFadingOut(true);
-  setTimeout(() => {
-    onComplete();
-  }, 500);
-};
-
->>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
+ 
 
   // Keyboard navigation
   useEffect(() => {

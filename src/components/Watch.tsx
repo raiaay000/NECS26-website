@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 import { useState, useEffect, useRef } from 'react';
 import { Youtube, Twitch, ExternalLink, Users, Eye, Star, ChevronDown, X } from 'lucide-react';
 
@@ -8,10 +8,7 @@ const XIcon = ({ className }: { className?: string }) => (
     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
   </svg>
 );
-=======
-import { useState } from 'react';
-import { Youtube, Twitch, Twitter, ExternalLink, Users, Eye, Star } from 'lucide-react';
->>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
+ 
 
 const contentCreators = [
   {
@@ -204,7 +201,7 @@ const contentCreators = [
 export function Watch() {
   const [filter, setFilter] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
-<<<<<<< HEAD
+
   const [selectedCreator, setSelectedCreator] = useState<typeof contentCreators[0] | null>(null);
   const [isBrowseExpanded, setIsBrowseExpanded] = useState(true);
   const [showApplyModal, setShowApplyModal] = useState(false);
@@ -238,11 +235,7 @@ export function Watch() {
     return () => cancelAnimationFrame(animationId);
   }, []);
 
-=======
-
-  const categories = ['All', 'Multi-Game', 'Valorant', 'Rocket League', 'Smash Bros'];
-
->>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
+ 
   const filteredCreators = contentCreators.filter(creator => {
     const matchesFilter = filter === 'All' || creator.category === filter;
     const matchesSearch = creator.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -250,12 +243,11 @@ export function Watch() {
     return matchesFilter && matchesSearch;
   });
 
-<<<<<<< HEAD
+
   // Duplicate creators for seamless loop
   const duplicatedCreators = [...contentCreators, ...contentCreators];
 
-=======
->>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
+ 
   return (
     <div className="min-h-screen bg-black text-white px-8 py-12">
       <div className="max-w-7xl mx-auto">
@@ -315,7 +307,7 @@ export function Watch() {
           </div>
         </div>
 
-<<<<<<< HEAD
+
         {/* Autonomous Carousel Section */}
         <div className="mb-12">
           <div className="flex items-center justify-between mb-6">
@@ -606,40 +598,12 @@ export function Watch() {
                     <div className="bg-purple-600 px-4 py-2 rounded-full flex items-center gap-2 text-sm font-bold">
                       <Twitch className="w-4 h-4" />
                       Twitch Streamer
-=======
-        {/* Content Creators Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCreators.map(creator => (
-            <div
-              key={creator.id}
-              className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-lg overflow-hidden hover:border-[#2f6bff] transition-all group"
-            >
-              {/* Creator Image */}
-              <div className="relative h-48 overflow-hidden">
-                <img
-                  src={creator.image}
-                  alt={creator.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-                
-                {/* Platform Badge */}
-                <div className="absolute top-3 right-3">
-                  {creator.platform === 'YouTube' ? (
-                    <div className="bg-red-600 px-3 py-1 rounded-full flex items-center gap-1 text-xs font-bold">
-                      <Youtube className="w-3 h-3" />
-                      YouTube
-                    </div>
-                  ) : (
-                    <div className="bg-purple-600 px-3 py-1 rounded-full flex items-center gap-1 text-xs font-bold">
-                      <Twitch className="w-3 h-3" />
-                      Twitch
->>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
+ 
                     </div>
                   )}
                 </div>
 
-<<<<<<< HEAD
+
                 {/* Name and Followers */}
                 <div className="absolute bottom-4 left-4 right-4">
                   <div className="flex items-center gap-3 mb-2">
@@ -725,94 +689,7 @@ export function Watch() {
                 </div>
               </div>
             </div>
-=======
-                {/* Verified Badge */}
-                {creator.verified && (
-                  <div className="absolute top-3 left-3 bg-[#2f6bff] w-6 h-6 rounded-full flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                )}
-
-                {/* Followers Count */}
-                <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm px-3 py-1 rounded-lg text-sm font-semibold">
-                  {creator.followers} followers
-                </div>
-              </div>
-
-              {/* Creator Info */}
-              <div className="p-6">
-                <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-                  {creator.name}
-                </h3>
-                
-                <p className="text-gray-400 text-sm mb-4 line-clamp-2">
-                  {creator.description}
-                </p>
-
-                {/* Specialty Tags */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {creator.specialty.map(game => (
-                    <span
-                      key={game}
-                      className="text-xs px-2 py-1 rounded-full bg-[#1a1a1a] text-gray-300 border border-[#2a2a2a]"
-                    >
-                      {game}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Social Links */}
-                <div className="flex gap-3 pt-4 border-t border-[#1a1a1a]">
-                  {creator.socialLinks.youtube && (
-                    <a
-                      href={creator.socialLinks.youtube}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-sm text-gray-400 hover:text-red-500 transition-colors"
-                    >
-                      <Youtube className="w-4 h-4" />
-                    </a>
-                  )}
-                  {creator.socialLinks.twitch && (
-                    <a
-                      href={creator.socialLinks.twitch}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-sm text-gray-400 hover:text-purple-500 transition-colors"
-                    >
-                      <Twitch className="w-4 h-4" />
-                    </a>
-                  )}
-                  {creator.socialLinks.twitter && (
-                    <a
-                      href={creator.socialLinks.twitter}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-sm text-gray-400 hover:text-blue-400 transition-colors"
-                    >
-                      <Twitter className="w-4 h-4" />
-                    </a>
-                  )}
-                  <a
-                    href="#"
-                    className="ml-auto flex items-center gap-1 text-sm text-[#2f6bff] hover:text-[#2557d6] transition-colors font-semibold"
-                  >
-                    Visit Channel
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* No Results */}
-        {filteredCreators.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-400 text-lg">No content creators found matching your search.</p>
->>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
+ 
           </div>
         )}
 
@@ -822,7 +699,7 @@ export function Watch() {
           <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
             Join our official content creator program for exclusive access, early tournament info, and special perks.
           </p>
-<<<<<<< HEAD
+
           <button 
             onClick={() => setShowApplyModal(true)}
             className="bg-[#2f6bff] px-8 py-3 rounded-lg font-bold hover:bg-[#2557d6] transition-all transform hover:scale-105"
@@ -965,12 +842,7 @@ export function Watch() {
             </div>
           </div>
         )}
-=======
-          <button className="bg-[#2f6bff] px-8 py-3 rounded-lg font-bold hover:bg-[#2557d6] transition-all transform hover:scale-105">
-            Apply Now
-          </button>
-        </div>
->>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
+ 
       </div>
     </div>
   );

@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-<<<<<<< HEAD
+
 import { User, Mail, Calendar, Shield, Save, CreditCard, Plus, Trash2, Lock, CheckCircle, Camera } from 'lucide-react';
-=======
-import { User, Mail, Calendar, Shield, Save } from 'lucide-react';
->>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
+ 
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 import { useToast } from './ui/toast';
 
@@ -15,18 +13,17 @@ interface ProfileProps {
 export function Profile({ userName, isGuest }: ProfileProps) {
   const toast = useToast();
   const [isEditing, setIsEditing] = useState(false);
-<<<<<<< HEAD
+
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [selectedColor, setSelectedColor] = useState('#2f6bff');
-=======
->>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
+ 
   const [formData, setFormData] = useState({
     name: userName,
     email: `${userName.toLowerCase()}@example.com`,
     joinDate: 'February 5, 2026',
     bio: 'Esports enthusiast and NECS 2026 attendee',
   });
-<<<<<<< HEAD
+
   
   const avatarColors = [
     { name: 'Blue', color: '#2f6bff', gradient: 'from-[#2f6bff] to-[#1a4fd6]' },
@@ -45,31 +42,28 @@ export function Profile({ userName, isGuest }: ProfileProps) {
   ]);
   
   const [showAddCard, setShowAddCard] = useState(false);
-=======
->>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
+ 
 
   const headerRef = useScrollAnimation();
   const profileCardRef = useScrollAnimation();
   const statsRef = useScrollAnimation();
-<<<<<<< HEAD
+
   const paymentRef = useScrollAnimation();
-=======
->>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
+ 
 
   const handleSave = () => {
     setIsEditing(false);
     toast.success('Profile updated successfully!');
   };
 
-<<<<<<< HEAD
+
   const handleColorSelect = (gradient: string) => {
     setSelectedColor(gradient);
     setShowAvatarPicker(false);
     toast.success('Avatar color updated! 🎨');
   };
 
-=======
->>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
+ 
   const stats = [
     { label: 'Tickets Purchased', value: '2', icon: '🎫' },
     { label: 'Merch Items', value: '5', icon: '🛍️' },
@@ -84,16 +78,13 @@ export function Profile({ userName, isGuest }: ProfileProps) {
           <div className="text-center py-20">
             <User className="w-20 h-20 mx-auto mb-6 text-gray-600" />
             <h2 className="text-3xl font-bold mb-4">Guest Profile</h2>
-<<<<<<< HEAD
+
             <p className="text-gray-400 mb-4">
               You're browsing as a guest. Create an account to save your preferences and access all features!
             </p>
             <p className="text-sm text-gray-500 mb-8">
               Guest users can still explore all pages, but data won't be saved.
-=======
-            <p className="text-gray-400 mb-8">
-              Create an account to access your full profile and track your NECS 2026 experience
->>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
+ 
             </p>
             <button className="bg-[#2f6bff] px-8 py-3 rounded-lg font-bold hover:bg-[#2557d6] transition-all">
               Create Account
@@ -117,7 +108,7 @@ export function Profile({ userName, isGuest }: ProfileProps) {
           <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-8 mb-8">
             <div className="flex items-start justify-between mb-8">
               <div className="flex items-center gap-6">
-<<<<<<< HEAD
+
                 <div className="relative group">
                   <div className={`w-24 h-24 bg-gradient-to-br ${selectedColor} rounded-full flex items-center justify-center text-4xl font-bold cursor-pointer transition-all hover:scale-105`}
                     onClick={() => setShowAvatarPicker(true)}>
@@ -127,10 +118,7 @@ export function Profile({ userName, isGuest }: ProfileProps) {
                     onClick={() => setShowAvatarPicker(true)}>
                     <Camera className="w-8 h-8 text-white" />
                   </div>
-=======
-                <div className="w-24 h-24 bg-gradient-to-br from-[#2f6bff] to-[#1a4fd6] rounded-full flex items-center justify-center text-4xl font-bold">
-                  {formData.name.charAt(0).toUpperCase()}
->>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
+ 
                 </div>
                 <div>
                   <h2 className="text-3xl font-bold mb-2">{formData.name}</h2>
@@ -247,7 +235,7 @@ export function Profile({ userName, isGuest }: ProfileProps) {
             </div>
           </div>
         </div>
-<<<<<<< HEAD
+
 
         {/* Payment Section */}
         <div ref={paymentRef.ref} className={`transition-all duration-700 ${paymentRef.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
@@ -310,8 +298,7 @@ export function Profile({ userName, isGuest }: ProfileProps) {
             </div>
           </div>
         )}
-=======
->>>>>>> ed37ba7e5134ef60801ee7d8b3ff4540e6400f5e
+ 
       </div>
     </div>
   );
