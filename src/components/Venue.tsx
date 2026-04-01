@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import imgBridgestone from "figma:asset/51dff6bdfa60cc281ef0bbb9670becee2c8ea42f.png";
+import imgBridgestone from '../assets/51dff6bdfa60cc281ef0bbb9670becee2c8ea42f.png';
 
 import { MapPin, Utensils, Coffee, Hotel, Info, Zap, DoorOpen, ExternalLink, Trophy, Users, Gamepad2, Maximize2, X, Wifi, ShoppingBag, Camera, Bath, Accessibility, Layers, Car, Search, Beer, Martini, Music, Building } from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';

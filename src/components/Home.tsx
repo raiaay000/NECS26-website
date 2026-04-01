@@ -3,8 +3,8 @@ import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Users, Gamepad2, Calendar, Trophy } from 'lucide-react';
 import { Section } from './shared/Section';
 import { CardSection } from './shared/CardSection';
-import imgGamingArena from 'figma:asset/36fa7e2744f888bac5571c92229138f0c4a5b000.png';
-import imgNecs2026 from 'figma:asset/abdfe18974432ad381c36af717ed374a5e15bc7a.png';
+import imgGamingArena from '../assets/36fa7e2744f888bac5571c92229138f0c4a5b000.png';
+import imgNecs2026 from '../assets/abdfe18974432ad381c36af717ed374a5e15bc7a.png';
 
 const newsItems = [
   { id: 1, image: "https://images.unsplash.com/photo-1568663469495-b09d5e3c2e07?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080", category: "Event", title: "Record-Breaking Attendance Expected", description: "Pre-sale tickets sold out in under 2 hours. Bridgestone Arena prepares for the biggest esports event of 2026." },

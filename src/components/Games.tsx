@@ -1,8 +1,8 @@
 import { Trophy, Users, Calendar, ArrowRight } from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
-import imgValorant from 'figma:asset/214f858ba251f9bcf5f3c196d820d721da1d6ed5.png';
-import imgRocketLeague from 'figma:asset/1bc58fae54dcca7b552df144447f3018f33509c6.png';
-import imgSmashBros from 'figma:asset/0677a2e1a1b5b1194c9e093e8a8081294729057c.png';
+import imgValorant from '../assets/214f858ba251f9bcf5f3c196d820d721da1d6ed5.png';
+import imgRocketLeague from '../assets/1bc58fae54dcca7b552df144447f3018f33509c6.png';
+import imgSmashBros from '../assets/0677a2e1a1b5b1194c9e093e8a8081294729057c.png';
 
 const games = [
   { id: 1, name: "Valorant", description: "5v5 character-based tactical shooter", image: imgValorant, teams: 4, format: "Best of 3", prizePool: "$400,000" },

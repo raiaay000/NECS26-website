@@ -1,6 +1,5 @@
 
-import smashImage from 'figma:asset/13106e410ec274380c5ed3457e761121ff7a9513.png';
- 
+import SuperSmashBrosImage from '../assets/images/13106e410ec274380c5ed3457e761121ff7a9513.png';
 import { GamePage } from './shared/GamePage';
 
 const tips = [
